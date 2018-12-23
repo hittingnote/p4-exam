@@ -130,6 +130,15 @@
       "action_name": "MyIngress.matchYes",
       "action_params": {
       }
+       }, 
+    {
+      "table": "MyIngress.boundTable",
+      "match": {
+        "hdr.ipv4.srcAddr": "10.0.1.11"
+      },
+      "action_name": "MyIngress.matchYes",
+      "action_params": {
+      }
        }
   ]
 }
