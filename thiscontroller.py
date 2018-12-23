@@ -17,17 +17,84 @@ SWITCH_TO_SWITCH_PORT = 2
 
 ######################################################################
 
-def writeRules(p4info_helper, ingress_sw, src_ip_addr):
+def writeRules(p4info_helper, ingress_sw, src_ip_addr, egress_sw, src_mac, src_port, dst_mac, dst_port):
+	table_entry = p4info_helper.buildTableEntry(
+		table_name = "MyINgress.rib",
+		match_fields = {
+			"hdr.ipv4.dstAddr": (src_ip_addr, 32)
+		},
+		action_name = "MyINgress.set_nhop",
+		action_params = {
+			"nhop_ipv4": src_ip_addr
+		}
+	);
+
+	ingress_sw.WriteTableEntry(table_entry)
+
+	table_entry = p4info_helper.buildTableEntry(
+		table_name = "MyINgress.interface",
+		match_fields = {
+			"meta.nhop_ipv4":src_ip_addr
+		},
+		action_name = "MyIngress.set_dmac",
+		action_params = {
+			"dmac": src_mac,
+			"port": src_port
+		}
+	);
+
+	ingress_sw.WriteTableEntry(table_entry)
+
+	table_entry = p4info_helper.buildTableEntry(
+		table_name = "MyIngress.fib",
+		match_fields = {
+			"standard_metadata.egress_spec": 1
+		},
+		action_name = "MyIngress.rewrite_mac",
+		action_params = {
+			"smac": src_mac
+		}
+	);
+
+	ingress_sw.WriteTableEntry(table_entry)
+
 	table_entry = p4info_helper.buildTableEntry(
 		table_name = "MyIngress.boundTable",
 		match_fields = {
-			"hdr.ipv4.srcAddr": (src_ip_addr, 32)
+			"hdr.ipv4.srcAddr": src_ip_addr
 		},
 		action_name = "MyIngress.matchYes", 
 		action_params = {}
 	);
 
 	ingress_sw.WriteTableEntry(table_entry)
+
+	table_entry = p4info_helper.buildTableEntry(
+		table_name = "MyIngress.rib",
+		match_fields = {
+			"hdr.ipv4.dstAddr": (src_ip_addr, 32)
+		},
+		action_name = "MyIngress.set_nhop",
+		action_params = {
+			"nhop_ipv4": src_ip_addr
+		}
+	);
+
+	egress_sw.WriteTableEntry(table_entry)
+
+	table_entry = p4info_helper.buildTableEntry(
+		table_name = "MyIngress.interface",
+		match_fields = {
+			"meta.nhop_ipv4": src_ip_addr
+		},
+		action_name = "MyIngress.set_dmac",
+		action_params = {
+			"dmac": dst_mac,
+			"port":dst_port
+		}
+	);
+
+	egress_sw.WriteTableEntry(table_entry)
 
 	print "Installed ingress rule on %s" % ingress_sw.name
 
@@ -203,7 +270,8 @@ def main(p4info_file_path, bmv2_file_path):
 
     #Write rules from h11 to h2
 
-    writeRules(p4info_helper, ingress_sw=s1, src_ip_addr="10.0.1.11")
+     writeRules(p4info_helper, s1, "10.0.1.11", s2, "00:00:00:00:10:0b", 1, "00:00:00:00:20:10", 3):
+#    writeRules(p4info_helper, ingress_sw=s1, src_ip_addr="10.0.1.11")
 
 """
     # Write the rules that tunnel traffic from h1 to h2
@@ -235,10 +303,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='P4Runtime Controller')
     parser.add_argument('--p4info', help='p4info proto in text format from p4c',
                         type=str, action="store", required=False,
-                        default='./build/advanced_tunnel.p4info')
+                        default='./build/zdf.p4info')
     parser.add_argument('--bmv2-json', help='BMv2 JSON file from p4c',
                         type=str, action="store", required=False,
-                        default='./build/advanced_tunnel.json')
+                        default='./build/zdf.json')
     args = parser.parse_args()
 
     if not os.path.exists(args.p4info):

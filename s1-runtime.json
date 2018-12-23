@@ -67,7 +67,7 @@
       "action_name": "MyIngress.set_dmac",
       "action_params": {
        "dmac":"00:00:00:00:20:10",
-       "port":3
+       "port":4
       }
       },
       {"table": "MyIngress.interface",
@@ -77,7 +77,7 @@
       "action_name": "MyIngress.set_dmac",
       "action_params": {
        "dmac":"00:00:00:00:30:10",
-       "port":4
+       "port":5
       }
      },
        {"table": "MyIngress.fib",
@@ -100,7 +100,7 @@
       },
       {"table": "MyIngress.fib",
       "match": {
-       "standard_metadata.egress_spec": 3
+       "standard_metadata.egress_spec": 4
       },
       "action_name": "MyIngress.rewrite_mac",
       "action_params": {
@@ -109,7 +109,7 @@
       },
       {"table": "MyIngress.fib",
       "match": {
-       "standard_metadata.egress_spec": 4
+       "standard_metadata.egress_spec": 5
       },
       "action_name": "MyIngress.rewrite_mac",
       "action_params": {
@@ -130,6 +130,6 @@
       "action_name": "MyIngress.matchYes",
       "action_params": {
       }
-    }
+       }
   ]
 }
