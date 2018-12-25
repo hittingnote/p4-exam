@@ -3,8 +3,9 @@
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-//#define __IS_SERVER
+#define __IS_SERVER
 
 using namespace std;
 
@@ -59,8 +60,30 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-		printf("Get a client, IP: %s, port: %d\n", inet_ntoa(remote.sin_addr), ntohs(remote.sin_port));
+//		printf("Get a client, IP: %s, port: %d\n", inet_ntoa(remote.sin_addr), ntohs(remote.sin_port));
+
+		char buffer[1024];
+		unsigned int size = recvfrom(sock_remote, buffer, 1023, 0, (struct sockaddr*)&remote, &len_remote);
+		buffer[size] = 0;
+		printf("Recv from client: %s\n", buffer);
+
+		sprintf(buffer, "Hello, client!");
+		sendto(sock_remote, buffer, sizeof(buffer), 0, (const struct sockaddr*)&remote, len_remote);
+		printf("Send to client: Hello client!\n");
+
+		close(sock_remote);
 	}
+#else
+	char buffer[1024];
+	sprintf(buffer, "Hello, server!");
+	sendto(sock, buffer, sizeof(buffer), 0, (const struct sockaddr*)&local, len);
+	printf("Send to server: Hello server!\n");
+
+	unsigned int size = recvfrom(sock, buffer, 1023, 0, (struct sockaddr*)&local, &len);
+	buffer[size] = 0;
+	printf("Recv from server: %s\n", buffer);
+
+	close(sock);
 #endif
 
 	return 0;
