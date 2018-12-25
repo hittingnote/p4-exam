@@ -4,13 +4,23 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define __IS_SERVER
 
 using namespace std;
 
+int sock;
+
 #define SERVER_PORT		8080
 #define SERVER_ADDR		"10.0.2.2"
+
+
+void exit_handler(int signo)
+{
+	close(sock);
+	exit(0);
+}
 
 int main(int argc, char *argv[])
 {
@@ -49,6 +59,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef __IS_SERVER
+	signal(SIGINT, exit_handler);
 	struct sockaddr_in remote;
 	socklen_t len_remote = sizeof(struct sockaddr_in);
 	while(1)
