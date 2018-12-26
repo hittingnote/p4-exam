@@ -1,15 +1,19 @@
 #include<core.p4>
 #include<v1model.p4>
+
+const bit<32> I2E_CLONE_SESSION_ID = 9;
+
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8>  TYPE_TCP = 0x06;
-const bit<9>  PORT_ONE=0x0;
-const bit<9>  PORT_TWO=0x1;
-const bit<9>  PORT_THREE=0x2;
-const bit<9>  PORT_FOUR=0x3;
+const bit<9>  PORT_ONE=0x1;
+const bit<9>  PORT_TWO=0x2;
+const bit<9>  PORT_THREE=0x3;
+const bit<9>  PORT_FOUR=0x4;
 const bit<1> ZERO=0;
 const bit<1> one = 1;
+const bit<9> CPU_MIRROR_SESSION_ID=0x9;
 
- typedef bit<32> nhop_ipv4_t;
+typedef bit<32> nhop_ipv4_t;
 typedef bit<48> dmac_t;
 typedef bit<9> port_t;
 typedef bit<48> smac_t;
@@ -79,8 +83,8 @@ struct headers {
     tcp_t      tcp;
 }
 
-register <bit<32>>(REGISTER_SIZE)srcAddr_register;
-//#############################################½âÎö######################################3
+register <bit<32>>(REGISTER_SIZE) srcAddr_register;
+//#############################################è§£æ######################################3
 parser MyParser(packet_in packet,
                 out headers hdr,
                 inout metadata meta,
@@ -110,6 +114,10 @@ parser MyParser(packet_in packet,
         transition accept;
     }
 }
+//###################################################3333333
+ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
+     apply {  }
+}
 
 //######################################ingress#########################################
 control MyIngress (inout headers hdr,
@@ -125,13 +133,14 @@ action matchYes(){
 action matchNo(){
         meta.flag=ZERO;
 }
-table boundTable{//Æ¥Åä°ó¶¨±í£¬³É¹¦¾ÍÈÃflag=oneÊ§°Ü¾ÍÈÃflag=zero
+table boundTable{//åŒ¹é…ç»‘å®šè¡¨ï¼ŒæˆåŠŸå°±è®©flag=oneå¤±è´¥å°±è®©flag=zero
     key=
     {
         hdr.ipv4.srcAddr:exact;
     }
     actions = {
         matchYes;
+	matchNo;
     }
     size = 1024;
     default_action = matchNo;
@@ -139,16 +148,18 @@ table boundTable{//Æ¥Åä°ó¶¨±í£¬³É¹¦¾ÍÈÃflag=oneÊ§°Ü¾ÍÈÃflag=zero
 action get_port_action(){
         meta.in_port = standard_metadata.ingress_port;
 }
-table get_port{//ÈÃmeta.in_port = standard_metadata.ingress_port;
+table get_port{//è®©meta.in_port = standard_metadata.ingress_port;
    key={}
    actions={
         get_port_action;
 }
 }
-action syn_action(){//ÔÚindex=Èë¶Ë¿Ú´¦£¬´æ´¢Ô´ipµØÖ·£¬È»ºó°ÑÄ¿µÄ¶Ë¿Ú¸Ä³ÉÈë¶Ë¿Ú£¬×ª·¢
+action syn_action(){//åœ¨index=å…¥ç«¯å£å¤„ï¼Œå­˜å‚¨æºipåœ°å€ï¼Œç„¶åæŠŠç›®çš„ç«¯å£æ”¹æˆå…¥ç«¯å£ï¼Œè½¬å‘
     meta.value = meta.in_port % REGISTER_SIZE;
-    srcAddr_register.write(meta.value,hdr.ipv4.srcAddr);
+    
+    //srcAddr_register.write((bit<32>)hdr.ipv4.srcAddr, (bit<32>)meta.value);
     //register_write(srcAddr_register,meta.value,hdr.ipv4.srcAddr);
+    srcAddr_register.write((bit<32>)meta.value, (bit<32>)hdr.ipv4.srcAddr);
     standard_metadata.egress_spec=standard_metadata.ingress_port;
 }
 table SYN{
@@ -157,9 +168,11 @@ table SYN{
         syn_action;
     }
 }
-action ack_action(){//ÔÚindex=Èë¶Ë¿Ú´¦£¬È¡³ö´æ´¢µÄIPµØÖ·
+action ack_action(){//åœ¨index=å…¥ç«¯å£å¤„ï¼Œå–å‡ºå­˜å‚¨çš„IPåœ°å€
     meta.value = meta.in_port % REGISTER_SIZE;
-    meta.srcAddr=srcAddr_register.read(meta.value);
+  //  meta.srcAddr=srcAddr_register.read(meta.value);
+    //srcAddr_register.read((bit<32>)meta.value, meta.srcAddr);
+    srcAddr_register.read(meta.srcAddr, (bit<32>)meta.value);
     //register_read(meta.srcAddr,srcAddr_register,meta.value);
 }
 table ACK{
@@ -169,7 +182,7 @@ table ACK{
         _drop;
     }
 }
-//ÒÔÏÂÊÇ´«Í³µÄ×ª·¢¹ı³Ì£¨³­Öú½ÌµÄ´úÂë£©
+//ä»¥ä¸‹æ˜¯ä¼ ç»Ÿçš„è½¬å‘è¿‡ç¨‹ï¼ˆæŠ„åŠ©æ•™çš„ä»£ç ï¼‰
 action set_nhop(nhop_ipv4_t nhop_ipv4) {
     meta.nhop_ipv4=nhop_ipv4;
     hdr.ipv4.ttl=hdr.ipv4.ttl-1;
@@ -222,34 +235,100 @@ table dropTable{
         _drop();
     }
 }
+/*
+action do_copy_to_cpu() {
+    clone_ingress_pkt_to_egress(CPU_MIRROR_SESSION_ID);
+}
+*/
 
-//############################apply¹ı³Ì#######33
-apply{
-    if(hdr.ipv4.ttl>0){
-//²é¿´¶Ë¿ÚºÅ£¬¶Ô¶Ë¿ÚºÅÊ±Port_one\port_two\port_three\Port_fourµÄ¶Ë¿ÚÈÏÎªËûÃÇÊÇÓë¿Í·ş¶ËÏàÁ¬µÄ¶Ë¿Ú£¬²¢¶ÔËûÃÇ½øĞĞÔ´µØÖ·ÈÏÖ¤
-        if(standard_metadata.ingress_port==PORT_ONE||standard_metadata.ingress_port==PORT_TWO||standard_metadata.ingress_port==PORT_THREE||standard_metadata.ingress_port==PORT_FOUR){
-            boundTable.apply();//ÑéÖ¤°ó¶¨±í
-            get_port.apply();//½«Èë¶Ë¿ÚµÄÖµ´Óstandard.ingress_port,´«¸ømeta.in_port
-            if(meta.flag==ZERO){//ÑéÖ¤°ó¶¨±íÊ§°Ü
-                if(hdr.tcp.SYN==1){//²é¿´ÊÇ·ñÊÇsyn±¨ÎÄ
-                    SYN.apply();
-                    fib.apply();
-                }
-                else if(hdr.tcp.ACK==1){//²é¿´ÊÇ·ñÊÇACK±¨ÎÄ
-                    ACK.apply();
-                    if(meta.srcAddr==hdr.ipv4.srcAddr){
-                               //yushangcengjiaohu
-                    }
-                }
-                else{dropTable.apply();}
-            }
-            else{//ÑéÖ¤°ó¶¨±í³É¹¦£¬È»ºóÖ´ĞĞ×ª·¢²Ù×÷
-                rib.apply();
-                interface.apply();
-                fib.apply();
-            }
-        }
-    }
-  }
+action do_copy_to_cpu() {
+	clone3(CloneType.I2E, I2E_CLONE_SESSION_ID, standard_metadata);
 }
 
+table copy_to_cpu {
+    key={}
+    actions= {do_copy_to_cpu;}
+    size =1;
+}
+
+//############################applyè¿‡ç¨‹#######33
+apply{
+    if(hdr.ipv4.ttl>0){
+               
+//æŸ¥çœ‹ç«¯å£å·ï¼Œå¯¹ç«¯å£å·æ—¶Port_one\port_two\port_three\Port_fourçš„ç«¯å£è®¤ä¸ºä»–ä»¬æ˜¯ä¸å®¢æœç«¯ç›¸è¿çš„ç«¯å£ï¼Œå¹¶å¯¹ä»–ä»¬è¿›è¡Œæºåœ°å€è®¤è¯
+        if(standard_metadata.ingress_port==PORT_ONE||standard_metadata.ingress_port==PORT_ONE){
+            boundTable.apply();//éªŒè¯ç»‘å®šè¡¨
+            get_port.apply();//å°†å…¥ç«¯å£çš„å€¼ä»standard.ingress_port,ä¼ ç»™meta.in_port
+            if(meta.flag==ZERO){//éªŒè¯ç»‘å®šè¡¨å¤±bai
+                if(hdr.tcp.SYN==1){//æŸ¥çœ‹æ˜¯å¦æ˜¯synæŠ¥æ–‡
+                    SYN.apply();
+                  // fib.apply();
+                 }
+                else if(hdr.tcp.ACK==1){//æŸ¥çœ‹æ˜¯å¦æ˜¯ACKæŠ¥æ–‡
+                    ACK.apply();
+                    if(meta.srcAddr==hdr.ipv4.srcAddr){
+                               copy_to_cpu.apply();
+                      }
+                  }
+                  else{
+                     dropTable.apply();
+                  }
+             }
+            else{//éªŒè¯ç»‘å®šè¡¨æˆåŠŸï¼Œç„¶åæ‰§è¡Œè½¬å‘æ“ä½œ
+               rib.apply();
+               interface.apply();
+               fib.apply();
+              }
+        }
+       else{
+            rib.apply();
+              interface.apply();
+              fib.apply();
+        }
+  }
+}
+}
+//##########################Egress##########################
+control MyEgress(inout headers hdr,
+                  inout metadata meta,
+                  inout standard_metadata_t standard_metadata)
+{
+apply{}
+}
+//############################copmputerChecksum#############33
+control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
+      apply {
+     update_checksum(
+         hdr.ipv4.isValid(),
+             { hdr.ipv4.version,
+           hdr.ipv4.ihl,
+               hdr.ipv4.diffserv,
+               hdr.ipv4.totalLen,
+               hdr.ipv4.identification,
+               hdr.ipv4.flags,
+               hdr.ipv4.fragOffset,
+               hdr.ipv4.ttl,
+               hdr.ipv4.protocol,
+               hdr.ipv4.srcAddr,
+               hdr.ipv4.dstAddr },
+             hdr.ipv4.hdrChecksum,
+             HashAlgorithm.csum16);
+     }
+ }
+//#########################depaser##########################
+control MyDeparser(packet_out packet, in headers hdr) {
+   apply {
+         packet.emit(hdr.ethernet);
+         packet.emit(hdr.ipv4);
+         packet.emit(hdr.tcp);
+     }
+ }
+
+ V1Switch(
+MyParser(),
+MyVerifyChecksum(),
+MyIngress(),
+MyEgress(),
+MyComputeChecksum(),
+MyDeparser()
+) main;
