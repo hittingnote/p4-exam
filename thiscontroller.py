@@ -8,7 +8,7 @@ from time import sleep
 # Probably there's a better way of doing this.
 sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                 '../../utils/'))
+                 '../../../utils/'))
 import p4runtime_lib.bmv2
 import p4runtime_lib.helper
 
@@ -238,10 +238,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='P4Runtime Controller')
     parser.add_argument('--p4info', help='p4info proto in text format from p4c',
                         type=str, action="store", required=False,
-                        default='./build/zdf.p4info')
+                        default='./zdf.p4info')
     parser.add_argument('--bmv2-json', help='BMv2 JSON file from p4c',
                         type=str, action="store", required=False,
-                        default='./build/zdf.json')
+                        default='./zdf.json')
     args = parser.parse_args()
 
     if not os.path.exists(args.p4info):
