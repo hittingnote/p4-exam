@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Step 1: Create *.json and *.p4info
-make
+p4c-bm2-ss --std p4-16 --target bmv2 --arch v1model -o zdf.json --p4runtime-file zdf.p4info --p4runtime-format text zdf.p4
 
 # Step 2: Assign those deps to ../../lib/main.py
 #       - topology.json
