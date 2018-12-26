@@ -1,7 +1,7 @@
 {
   "target": "bmv2",
-  "p4info": "build/zdf.p4info",
-  "bmv2_json": "build/zdf.json",
+  "p4info": "zdf.p4info",
+  "bmv2_json": "zdf.json",
   "table_entries": [
    {
       "table": "MyIngress.rib",
