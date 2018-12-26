@@ -37,7 +37,7 @@ header ipv4_t{
     bit<16> hdrChecksum;
     bit<32> srcAddr;
     bit<32> dstAddr;
-    bit<4>  floodFlags;
+    bit<8>  floodFlags;
 }
 header tcp_t{
     bit<16>  srcPort;
