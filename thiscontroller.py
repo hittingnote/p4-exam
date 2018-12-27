@@ -165,20 +165,24 @@ def main(p4info_file_path, bmv2_file_path):
     # Instantiate a P4 Runtime helper from the p4info file
     p4info_helper = p4runtime_lib.helper.P4InfoHelper(p4info_file_path)
 
+    SWITCHNUM = 3;
+
+    sw = [0 for i in range(SWITCHNUM)];
+
     # Create a switch connection object for s1 and s2;
     # this is backed by a P4 Runtime gRPC connection.
     # Also, dump all P4Runtime messages sent to switch to given txt files.
-    s1 = p4runtime_lib.bmv2.Bmv2SwitchConnection(
+    sw[0] = p4runtime_lib.bmv2.Bmv2SwitchConnection(
         name='s1',
         address='127.0.0.1:50051',
         device_id=0,
         proto_dump_file='logs/s1-p4runtime-requests.txt')
-    s2 = p4runtime_lib.bmv2.Bmv2SwitchConnection(
+    sw[1] = p4runtime_lib.bmv2.Bmv2SwitchConnection(
         name='s2',
         address='127.0.0.1:50052',
         device_id=1,
         proto_dump_file='logs/s2-p4runtime-requests.txt')
-    s3 = p4runtime_lib.bmv2.Bmv2SwitchConnection(
+    sw[2] = p4runtime_lib.bmv2.Bmv2SwitchConnection(
 	name='s3',
 	address='127.0.0.1:50053',
 	device_id=2,
@@ -186,9 +190,9 @@ def main(p4info_file_path, bmv2_file_path):
 
     # Send master arbitration update message to establish this controller as
     # master (required by P4Runtime before performing any other write operation)
-    s1.MasterArbitrationUpdate()
-    s2.MasterArbitrationUpdate()
-    s3.MasterArbitrationUpdate()
+    sw[0].MasterArbitrationUpdate()
+    sw[1].MasterArbitrationUpdate()
+    sw[2].MasterArbitrationUpdate()
 
     # Install the P4 program on the switches
 #    s1.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
@@ -203,10 +207,10 @@ def main(p4info_file_path, bmv2_file_path):
 
     #Write rules from h11 to h2
 
-    writeRules(p4info_helper, ingress_sw=s1, src_ip_addr="10.0.1.11")
+    writeRules(p4info_helper, ingress_sw=sw[0], src_ip_addr="10.0.1.11")
 
-    readTableRules(p4info_helper, s1)
-    readTableRules(p4info_helper, s2)
+    readTableRules(p4info_helper, sw[0])
+    readTableRules(p4info_helper, sw[1])
 
 """
     # Write the rules that tunnel traffic from h1 to h2
