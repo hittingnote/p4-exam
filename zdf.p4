@@ -1,5 +1,8 @@
 #include<core.p4>
 #include<v1model.p4>
+//#include "includes/headers.p4"
+
+#define CPU_PORT	255
 
 const bit<32> I2E_CLONE_SESSION_ID = 9;
 
@@ -77,7 +80,22 @@ struct metadata{
       bit<1>flag;
 }
 
+// packet in
+@ controller_header("packet_in")
+header packet_in_header_t {
+	bit<16> ingress_port;
+}
+
+// packet out
+@controller_header("packet_out")
+header packet_out_header_t {
+	bit<16> egress_port;
+	bit<16> mcast_grp;
+}
+
 struct headers {
+	packet_out_header_t packet_out;
+	packet_in_header_t  packet_in;
     ethernet_t ethernet;
     ipv4_t     ipv4;
     tcp_t      tcp;
@@ -242,12 +260,17 @@ action do_copy_to_cpu() {
 */
 
 action do_copy_to_cpu() {
-	clone3(CloneType.I2E, I2E_CLONE_SESSION_ID, standard_metadata);
+//	clone3(CloneType.I2E, I2E_CLONE_SESSION_ID, standard_metadata);
+
+	standard_metadata.egress_spec = CPU_PORT;
+	hdr.packet_in.setValid();
+	hdr.packet_in.ingress_port = (bit<16>)standard_metadata.ingress_port;
 }
 
 table copy_to_cpu {
     key={}
     actions= {do_copy_to_cpu;}
+	default_action = do_copy_to_cpu;
     size =1;
 }
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env python2
+import grpc
 import argparse
 import os
 import sys
 from time import sleep
+from scapy.all import *
 
 # Import P4Runtime lib from parent utils dir
 # Probably there's a better way of doing this.
@@ -10,6 +12,7 @@ sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)),
                  '../../../utils/'))
 import p4runtime_lib.bmv2
+from p4runtime_lib.switch import ShutdownAllSwitchConnections
 import p4runtime_lib.helper
 
 SWITCH_TO_HOST_PORT = 1
@@ -165,78 +168,53 @@ def main(p4info_file_path, bmv2_file_path):
     # Instantiate a P4 Runtime helper from the p4info file
     p4info_helper = p4runtime_lib.helper.P4InfoHelper(p4info_file_path)
 
-    SWITCHNUM = 3;
+try:
+		SWITCH_NUM = 3
+		sw = [0 for i in range(SWITCH_NUM)]
+		# Connect with switches using gRPC
+		sw[0] = p4runtime_lib.bmv2.Bmv2SwitchConnection (
+			name='s1',
+			address='127.0.0.1:50051',
+			device_id=0,
+			proto_dump_file='logs/s1-p4runtime-requests.txt')
 
-    sw = [0 for i in range(SWITCHNUM)];
+		sw[1] = p4runtime_lib.bmv2.Bmv2SwitchConnection (
+			name='s2',
+			address='127.0.0.1:50052',
+			device_id=1,
+			proto_dump_file='logs/s2-p4runtime-requests.txt')
 
-    # Create a switch connection object for s1 and s2;
-    # this is backed by a P4 Runtime gRPC connection.
-    # Also, dump all P4Runtime messages sent to switch to given txt files.
-    sw[0] = p4runtime_lib.bmv2.Bmv2SwitchConnection(
-        name='s1',
-        address='127.0.0.1:50051',
-        device_id=0,
-        proto_dump_file='logs/s1-p4runtime-requests.txt')
-    sw[1] = p4runtime_lib.bmv2.Bmv2SwitchConnection(
-        name='s2',
-        address='127.0.0.1:50052',
-        device_id=1,
-        proto_dump_file='logs/s2-p4runtime-requests.txt')
-    sw[2] = p4runtime_lib.bmv2.Bmv2SwitchConnection(
-	name='s3',
-	address='127.0.0.1:50053',
-	device_id=2,
-	proto_dump_file='logs/s3-p4runtime-requests.txt')
+		sw[2] = p4runtime_lib.bmv2.Bmv2SwitchConnection (
+			name='s3',
+			address='127.0.0.1:50053',
+			device_id=2,
+			proto_dump_file='logs/s3-p4runtime-requests.txt')
 
-    # Send master arbitration update message to establish this controller as
-    # master (required by P4Runtime before performing any other write operation)
-    sw[0].MasterArbitrationUpdate()
-    sw[1].MasterArbitrationUpdate()
-    sw[2].MasterArbitrationUpdate()
+		# Set this controller as master in all switches
+		for i in range(SWITCH_NUM):
+			sw[i].MasterArbitrationUpdate()
 
-    # Install the P4 program on the switches
-#    s1.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
-#                                   bmv2_json_file_path=bmv2_file_path)
-#    print "Installed P4 Program using SetForwardingPipelineConfig on s1"
-#    s2.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
-#                                   bmv2_json_file_path=bmv2_file_path)
-#    print "Installed P4 Program using SetForwardingPipelineConfig on s2"
-#    s3.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
-#				   bmv2_json_file_path=bmv2_file_path)
+		while True:
+			for switch in sw:
+				packetin = switch.PacketIn()
+				if packetin.WhichOneof('update') == 'packet':
+					packet = packetin.packet.payload
+					pkt = Ether(_pkt=packet)
+					metadata = packetin.packet.metadata
+					for meta in metadata:
+						metadata_id = meta.metadata_id
+						value = meta.value
+					print packet
 
+except KeyboardInterrupt:
+		# using ctrl + c to exit
+		print "Shutting down."
+except grpc.RpcError as e:
+		printGrpcError(e)
 
-    #Write rules from h11 to h2
+	# Then close all the connections
+ShutdownAllSwitchConnections()
 
-    writeRules(p4info_helper, ingress_sw=sw[0], src_ip_addr="10.0.1.11")
-
-    readTableRules(p4info_helper, sw[0])
-    readTableRules(p4info_helper, sw[1])
-
-"""
-    # Write the rules that tunnel traffic from h1 to h2
-    writeTunnelRules(p4info_helper, ingress_sw=s1, egress_sw=s2, tunnel_id=100,
-                     dst_eth_addr="00:00:00:00:02:02", dst_ip_addr="10.0.2.2")
-
-    # Write the rules that tunnel traffic from h2 to h1
-    writeTunnelRules(p4info_helper, ingress_sw=s2, egress_sw=s1, tunnel_id=200,
-                     dst_eth_addr="00:00:00:00:01:01", dst_ip_addr="10.0.1.1")
-
-    # TODO Uncomment the following two lines to read table entries from s1 and s2
-    readTableRules(p4info_helper, s1)
-    readTableRules(p4info_helper, s2)
-
-    # Print the tunnel counters every 2 seconds
-    try:
-        while True:
-            sleep(2)
-            print '\n----- Reading tunnel counters -----'
-            printCounter(p4info_helper, s1, "MyIngress.ingressTunnelCounter", 100)
-            printCounter(p4info_helper, s2, "MyIngress.egressTunnelCounter", 100)
-            printCounter(p4info_helper, s2, "MyIngress.ingressTunnelCounter", 200)
-            printCounter(p4info_helper, s1, "MyIngress.egressTunnelCounter", 200)
-    except KeyboardInterrupt:
-        print " Shutting down."
-"""
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='P4Runtime Controller')
