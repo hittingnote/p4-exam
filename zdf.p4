@@ -94,7 +94,7 @@ struct metadata{
       bit<32>nhop_ipv4;
       bit<32>srcAddr;
       bit<1>flag;
-     csum_tcp_t tcp_csum_header;
+     csum_tcp_t csum_tcp_header;
 }
 
 struct headers {
