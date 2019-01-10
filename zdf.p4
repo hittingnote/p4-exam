@@ -65,7 +65,7 @@ header tcp_t{
     bit<32> timestampreply;
 }
 
-header csum_tcp_t {
+struct csum_tcp_t {
     bit<32> src_ip_addr;
     bit<32> dst_ip_addr;
     bit<16> protocol;
@@ -75,7 +75,7 @@ header csum_tcp_t {
     bit<32> seq;
     bit<32> ackNumber;
     bit<16> hl;
-    bit<16> window
+    bit<16> window;
     bit<16> urgentPointer;
 }
 
@@ -101,6 +101,8 @@ struct headers {
     ipv4_t     ipv4;
     tcp_t      tcp;
 }
+
+csum_tcp_t csum_tcp_header;
 
 register <bit<32>>(REGISTER_SIZE) srcAddr_register;
 //#############################################解析######################################3
@@ -283,6 +285,18 @@ table copy_to_cpu {
 
 //############################apply过程#######33
 apply{
+	csum_tcp_header.src_ip_addr = hdr.ipv4.srcAddr;
+	csum_tcp_header.dst_ip_addr = hdr.ipv4.dstAddr;
+	csum_tcp_header.protocol = (bit<16>)hdr.ipv4.protocol;
+	csum_tcp_header.tcp_len = (hdr.ipv4.totalLen - hdr.ipv4.ihl*4) / 4;
+	csum_tcp_header.srcPort = hdr.tcp.srcPort;
+	csum_tcp_header.dstPort = hdr.tcp.dstPort;
+	csum_tcp_header.seq = hdr.tcp.seq;
+	csum_tcp_header.ackNumber = hdr.tcp.ackNumber;
+	csum_tcp_header.hl = hdr.tcp.dataOffset<<12 + hdr.tcp.reserve<<6 + hdr.tcp.URG<<5 + hdr.tcp.ACK<<4 + hdr.tcp.PUSH<<3 + hdr.tcp.RST<<2 + hdr.tcp.SYN<<1 + hdr.tcp.FIN;
+	csum_tcp_header.window = hdr.tcp.window;
+	csum_tcp_header.urgentPointer = hdr.tcp.urgentPointer;
+
     if(hdr.ipv4.ttl>0){
 //查看端口号，对端口号时Port_one\port_two\port_three\Port_four的端口认为他们是与客服端相连的端口，并对他们进行源地址认证
         if(standard_metadata.ingress_port==PORT_ONE || standard_metadata.ingress_port==PORT_TWO || standard_metadata.ingress_port==PORT_THREE){
@@ -341,6 +355,28 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
                hdr.ipv4.dstAddr },
              hdr.ipv4.hdrChecksum,
              HashAlgorithm.csum16);
+	     
+	update_checksum_with_payload(
+		hdr.tcp.isValid(),
+		{
+			csum_tcp_header.src_ip_addr,
+			csum_tcp_header.dst_ip_addr,
+			csum_tcp_header.protocol,
+			csum_tcp_header.tcp_len,
+			csum_tcp_header.srcPort,
+			csum_tcp_header.dstPort,
+			csum_tcp_header.seq,
+			csum_tcp_header.ackNumber,
+			csum_tcp_header.hl,
+			csum_tcp_header.window,
+			csum_tcp_header.urgentPointer,
+			hdr.tcp.firstoption;
+			hdr.tcp.timestampval,
+			hdr.tcp.timestampreply
+		},
+		hdr.tcp.checkSum,
+		HashAlgorithm.csum16
+	);
 
 /*    bit<16> tcplen = ((bit<16>)hdr.ipv4.totalLen-(bit<16>)hdr.ipv4.ihl*4)/4;
     update_checksum_with_payload(
