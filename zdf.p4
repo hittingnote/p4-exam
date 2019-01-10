@@ -1,6 +1,8 @@
 #include<core.p4>
 #include<v1model.p4>
 
+#define CPU_PORT    255
+
 const bit<32> I2E_CLONE_SESSION_ID = 9;
 
 const bit<16> TYPE_IPV4 = 0x800;
@@ -17,6 +19,7 @@ typedef bit<32> nhop_ipv4_t;
 typedef bit<48> dmac_t;
 typedef bit<9> port_t;
 typedef bit<48> smac_t;
+
 
 header ethernet_t{
     bit<48> dstAddr;
@@ -242,13 +245,15 @@ action do_copy_to_cpu() {
 */
 
 action do_copy_to_cpu() {
-	clone3(CloneType.I2E, I2E_CLONE_SESSION_ID, standard_metadata);
+//	clone3(CloneType.I2E, I2E_CLONE_SESSION_ID, standard_metadata);
+  standard_metadata.egress_spec = CPU_PORT;
 }
 
 table copy_to_cpu {
     key={}
     actions= {do_copy_to_cpu;}
     size =1;
+    default_action = do_copy_to_cpu;
 }
 
 //############################apply过程#######33

@@ -1,256 +1,166 @@
 #!/usr/bin/env python2
-import argparse
-import os
-import sys
+# -*- coding: utf-8 -*-
+import argparse, grpc, os, sys
 from time import sleep
+from scapy.all import *
 
-# Import P4Runtime lib from parent utils dir
-# Probably there's a better way of doing this.
+# set our lib path
 sys.path.append(
     os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                 '../../utils/'))
-import p4runtime_lib.bmv2
-import p4runtime_lib.helper
+        '../../../utils/'))
 
 SWITCH_TO_HOST_PORT = 1
 SWITCH_TO_SWITCH_PORT = 2
 
-######################################################################
+# And then we import
+import p4runtime_lib.bmv2
+from p4runtime_lib.switch import ShutdownAllSwitchConnections
+import p4runtime_lib.helper
 
-def writeRules(p4info_helper, ingress_sw, src_ip_addr):
-	table_entry = p4info_helper.buildTableEntry(
-		table_name = "MyIngress.boundTable",
-		match_fields = {
-			"hdr.ipv4.srcAddr": src_ip_addr
-		},
-		action_name = "MyIngress.matchYes", 
-		action_params = {}
-	);
-
-	ingress_sw.WriteTableEntry(table_entry)
-
-	print "Installed ingress rule on %s" % ingress_sw.name
-
-######################################################################
-
-def writeTunnelRules(p4info_helper, ingress_sw, egress_sw, tunnel_id,
-                     dst_eth_addr, dst_ip_addr):
-    """
-    Installs three rules:
-    1) An tunnel ingress rule on the ingress switch in the ipv4_lpm table that
-       encapsulates traffic into a tunnel with the specified ID
-    2) A transit rule on the ingress switch that forwards traffic based on
-       the specified ID
-    3) An tunnel egress rule on the egress switch that decapsulates traffic
-       with the specified ID and sends it to the host
-
-    :param p4info_helper: the P4Info helper
-    :param ingress_sw: the ingress switch connection
-    :param egress_sw: the egress switch connection
-    :param tunnel_id: the specified tunnel ID
-    :param dst_eth_addr: the destination IP to match in the ingress rule
-    :param dst_ip_addr: the destination Ethernet address to write in the
-                        egress rule
-    """
-    # 1) Tunnel Ingress Rule
+def writeARPReply(p4info_helper, sw, in_port, dst_eth_addr, port=None):
     table_entry = p4info_helper.buildTableEntry(
-        table_name="MyIngress.ipv4_lpm",
-        match_fields={
-            "hdr.ipv4.dstAddr": (dst_ip_addr, 32)
+        table_name = "basic_tutorial_ingress.arp.arp_exact",
+        match_fields = {
+            "standard_metadata.ingress_port": in_port,
+            "hdr.ethernet.dstAddr": dst_eth_addr
         },
-        action_name="MyIngress.myTunnel_ingress",
-        action_params={
-            "dst_id": tunnel_id,
+        action_name = "basic_tutorial_ingress.arp.arp_reply",
+        action_params = {
+            "port": port
         })
-    ingress_sw.WriteTableEntry(table_entry)
-    print "Installed ingress tunnel rule on %s" % ingress_sw.name
+    sw.WriteTableEntry(table_entry)
+    print "Installed ARP Reply rule via P4Runtime."
 
-    # 2) Tunnel Transit Rule
-    # The rule will need to be added to the myTunnel_exact table and match on
-    # the tunnel ID (hdr.myTunnel.dst_id). Traffic will need to be forwarded
-    # using the myTunnel_forward action on the port connected to the next switch.
-    #
-    # For our simple topology, switch 1 and switch 2 are connected using a
-    # link attached to port 2 on both switches. We have defined a variable at
-    # the top of the file, SWITCH_TO_SWITCH_PORT, that you can use as the output
-    # port for this action.
-    #
-    # We will only need a transit rule on the ingress switch because we are
-    # using a simple topology. In general, you'll need on transit rule for
-    # each switch in the path (except the last switch, which has the egress rule),
-    # and you will need to select the port dynamically for each switch based on
-    # your topology.
-
-    # TODO build the transit rule
-    # TODO install the transit rule on the ingress switch
+def writeARPFlood(p4info_helper, sw, in_port, dst_eth_addr, port=None):
     table_entry = p4info_helper.buildTableEntry(
-        table_name="MyIngress.myTunnel_exact",
-        match_fields={
-            "hdr.myTunnel.dst_id": tunnel_id
+        table_name = "basic_tutorial_ingress.arp.arp_exact",
+        match_fields = {
+            "standard_metadata.ingress_port": in_port,
+            "hdr.ethernet.dstAddr": dst_eth_addr
         },
-        action_name="MyIngress.myTunnel_forward",
-        action_params={
-            "port": SWITCH_TO_SWITCH_PORT
-        })
-    ingress_sw.WriteTableEntry(table_entry)
-    print "Installed transit tunnel rule on %s" % ingress_sw.name
+        action_name = "basic_tutorial_ingress.arp.flooding",
+        action_params = {
+        }
+    )
+    sw.WriteTableEntry(table_entry)
+    print "Installed ARP Flooding rule via P4Runtime."
 
-    # 3) Tunnel Egress Rule
-    # For our simple topology, the host will always be located on the
-    # SWITCH_TO_HOST_PORT (port 1).
-    # In general, you will need to keep track of which port the host is
-    # connected to.
+def writeIPForward(p4info_helper, sw, ip_dst_addr, eth_dst_addr, port=None):
     table_entry = p4info_helper.buildTableEntry(
-        table_name="MyIngress.myTunnel_exact",
-        match_fields={
-            "hdr.myTunnel.dst_id": tunnel_id
+        table_name = "MyIngress.ipv4_lpm",
+        match_fields = {
+            "hdr.ipv4.dstAddr": (ip_dst_addr,32)
         },
-        action_name="MyIngress.myTunnel_egress",
-        action_params={
-            "dstAddr": dst_eth_addr,
-            "port": SWITCH_TO_HOST_PORT
-        })
-    egress_sw.WriteTableEntry(table_entry)
-    print "Installed egress tunnel rule on %s" % egress_sw.name
+        action_name = "MyIngress.ipv4_forward",
+        action_params = {
+            "dstAddr": eth_dst_addr,
+            "port": port
+        }
+    )
+    sw.WriteTableEntry(table_entry)
+    print("Installed MyIngress.ipv4_lpm rule via P4Runtime")
 
+def writeBoundTable(p4info_helper, sw, ip_src_addr):
+    table_entry = p4info_helper.buildTableEntry(
+        table_name = "MyIngress.boundTable",
+        match_fields = {
+            "hdr.ipv4.srcAddr": ip_src_addr
+        },
+        action_name = "MyIngress.matchYes",
+        action_params = {}
+    )
 
-def readTableRules(p4info_helper, sw):
-    """
-    Reads the table entries from all tables on the switch.
+    sw.WriteTableEntry(table_entry)
+    print("Installed MyIngress.boundTable rule via P4Runtime")
 
-    :param p4info_helper: the P4Info helper
-    :param sw: the switch connection
-    """
-    print '\n----- Reading tables rules for %s -----' % sw.name
-    for response in sw.ReadTableEntries():
-        for entity in response.entities:
-            entry = entity.table_entry
-            # TODO For extra credit, you can use the p4info_helper to translate
-            #      the IDs the entry to names
-            table_name = p4info_helper.get_tables_name(entry.table_id)
-            print '%s: ' % table_name,
-            for m in entry.match:
-                print p4info_helper.get_match_field_name(table_name, m.field_id),
-                print '%r' % (p4info_helper.get_match_field_value(m),),
-            action = entry.action.action
-            action_name = p4info_helper.get_actions_name(action.action_id)
-            print '->', action_name,
-            for p in action.params:
-                print p4info_helper.get_action_param_name(action_name, p.param_id),
-                print '%r' % p.value,
-            print
-
-
-def printCounter(p4info_helper, sw, counter_name, index):
-    """
-    Reads the specified counter at the specified index from the switch. In our
-    program, the index is the tunnel ID. If the index is 0, it will return all
-    values from the counter.
-
-    :param p4info_helper: the P4Info helper
-    :param sw:  the switch connection
-    :param counter_name: the name of the counter from the P4 program
-    :param index: the counter index (in our case, the tunnel ID)
-    """
-    for response in sw.ReadCounters(p4info_helper.get_counters_id(counter_name), index):
-        for entity in response.entities:
-            counter = entity.counter_entry
-            print "%s %s %d: %d packets (%d bytes)" % (
-                sw.name, counter_name, index,
-                counter.data.packet_count, counter.data.byte_count
-            )
-
+def printGrpcError(e):
+    print "gRPC Error: ", e.details(),
+    status_code = e.code()
+    print "(%s)" % status_code.name,
+    # detail about sys.exc_info - https://docs.python.org/2/library/sys.html#sys.exc_info
+    traceback = sys.exc_info()[2]
+    print "[%s:%s]" % (traceback.tb_frame.f_code.co_filename, traceback.tb_lineno)
 
 def main(p4info_file_path, bmv2_file_path):
-    # Instantiate a P4 Runtime helper from the p4info file
+    # Instantiate a P4Runtime helper from the p4info file
+    # - then need to read from the file compile from P4 Program, which call .p4info
     p4info_helper = p4runtime_lib.helper.P4InfoHelper(p4info_file_path)
+    ipdst2ethdst = {}
+    ipdst2port = {}
+    ipdst2ethdst.setdefault("10.0.2.2", "00:00:00:02:02:00")
+    ipdst2port.setdefault("10.0.2.2", '\000\002')
+    ipdst2ethdst.setdefault("10.0.3.3", "00:00:00:03:03:00")
+    ipdst2port.setdefault("10.0.3.3", '\000\003')
 
-    # Create a switch connection object for s1 and s2;
-    # this is backed by a P4 Runtime gRPC connection.
-    # Also, dump all P4Runtime messages sent to switch to given txt files.
-    s1 = p4runtime_lib.bmv2.Bmv2SwitchConnection(
-        name='s1',
-        address='127.0.0.1:50051',
-        device_id=0,
-        proto_dump_file='logs/s1-p4runtime-requests.txt')
-    s2 = p4runtime_lib.bmv2.Bmv2SwitchConnection(
-        name='s2',
-        address='127.0.0.1:50052',
-        device_id=1,
-        proto_dump_file='logs/s2-p4runtime-requests.txt')
-    s3 = p4runtime_lib.bmv2.Bmv2SwitchConnection(
-	name='s3',
-	address='127.0.0.1:50053',
-	device_id=2,
-	proto_dump_file='logs/s3-p4runtime-requests.txt')
-
-    # Send master arbitration update message to establish this controller as
-    # master (required by P4Runtime before performing any other write operation)
-    s1.MasterArbitrationUpdate()
-    s2.MasterArbitrationUpdate()
-    s3.MasterArbitrationUpdate()
-
-    # Install the P4 program on the switches
-#    s1.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
-#                                   bmv2_json_file_path=bmv2_file_path)
-#    print "Installed P4 Program using SetForwardingPipelineConfig on s1"
-#    s2.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
-#                                   bmv2_json_file_path=bmv2_file_path)
-#    print "Installed P4 Program using SetForwardingPipelineConfig on s2"
-#    s3.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
-#				   bmv2_json_file_path=bmv2_file_path)
-
-
-    #Write rules from h11 to h2
-
-    writeRules(p4info_helper, ingress_sw=s1, src_ip_addr="10.0.1.11")
-
-    readTableRules(p4info_helper, s1)
-    readTableRules(p4info_helper, s2)
-
-"""
-    # Write the rules that tunnel traffic from h1 to h2
-    writeTunnelRules(p4info_helper, ingress_sw=s1, egress_sw=s2, tunnel_id=100,
-                     dst_eth_addr="00:00:00:00:02:02", dst_ip_addr="10.0.2.2")
-
-    # Write the rules that tunnel traffic from h2 to h1
-    writeTunnelRules(p4info_helper, ingress_sw=s2, egress_sw=s1, tunnel_id=200,
-                     dst_eth_addr="00:00:00:00:01:01", dst_ip_addr="10.0.1.1")
-
-    # TODO Uncomment the following two lines to read table entries from s1 and s2
-    readTableRules(p4info_helper, s1)
-    readTableRules(p4info_helper, s2)
-
-    # Print the tunnel counters every 2 seconds
     try:
+        """
+            建立與範例當中使用到的兩個 switch - s1, s2
+            使用的是 P4Runtime gRPC 的連線。
+            並且 dump 所有的 P4Runtime 訊息，並送到 switch 上以 txt 格式做儲存
+            - 以這邊 P4 的封裝來說， port no 起始從 50051 開始
+         """
+        s1 = p4runtime_lib.bmv2.Bmv2SwitchConnection(
+            name='s1',
+            address='127.0.0.1:50051',
+            device_id=0,
+            proto_dump_file='logs/s1-p4runtime-requests.txt')
+
+        # 傳送 master arbitration update message 來建立，使得這個 controller 成為
+        # master (required by P4Runtime before performing any other write operation)
+        s1.MasterArbitrationUpdate()
+
+        # 安裝目標 P4 程式到 switch 上
+#        s1.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
+#                                        bmv2_json_file_path=bmv2_file_path)
+        print "Installed P4 Program using SetForardingPipelineConfig on s1"
+#        readTableRules(p4info_helper, s1)
+
         while True:
-            sleep(2)
-            print '\n----- Reading tunnel counters -----'
-            printCounter(p4info_helper, s1, "MyIngress.ingressTunnelCounter", 100)
-            printCounter(p4info_helper, s2, "MyIngress.egressTunnelCounter", 100)
-            printCounter(p4info_helper, s2, "MyIngress.ingressTunnelCounter", 200)
-            printCounter(p4info_helper, s1, "MyIngress.egressTunnelCounter", 200)
+            packetin = s1.PacketIn()
+            if packetin.WhichOneof('update') == 'packet':
+                packet = packetin.packet.payload
+                pkt = Ether(_pkt=packet)
+                metadata = packetin.packet.metadata
+                for meta in metadata:
+                    metadata_id = meta.metadata_id
+                    value = meta.value
+
+                pkt.show2() 
     except KeyboardInterrupt:
-        print " Shutting down."
-"""
+        # using ctrl + c to exit
+        print "Shutting down."
+    except grpc.RpcError as e:
+        printGrpcError(e)
+
+    # Then close all the connections
+    ShutdownAllSwitchConnections()
+
 
 if __name__ == '__main__':
+    """ Simple P4 Controller
+        Args:
+            p4info:     指定 P4 Program 編譯產生的 p4info (PI 制定之格式、給予 controller 讀取)
+            bmv2-json:  指定 P4 Program 編譯產生的 json 格式，依據 backend 不同，而有不同的檔案格式
+     """
+
     parser = argparse.ArgumentParser(description='P4Runtime Controller')
+    # Specified result which compile from P4 program
     parser.add_argument('--p4info', help='p4info proto in text format from p4c',
-                        type=str, action="store", required=False,
-                        default='./build/zdf.p4info')
+            type=str, action="store", required=False,
+            default="./zdf.p4info")
     parser.add_argument('--bmv2-json', help='BMv2 JSON file from p4c',
-                        type=str, action="store", required=False,
-                        default='./build/zdf.json')
+            type=str, action="store", required=False,
+            default="./zdf.json")
     args = parser.parse_args()
 
     if not os.path.exists(args.p4info):
         parser.print_help()
-        print "\np4info file not found: %s\nHave you run 'make'?" % args.p4info
+        print "\np4info file not found: %s\nPlease compile the target P4 program first." % args.p4info
         parser.exit(1)
     if not os.path.exists(args.bmv2_json):
         parser.print_help()
-        print "\nBMv2 JSON file not found: %s\nHave you run 'make'?" % args.bmv2_json
+        print "\nBMv2 JSON file not found: %s\nPlease compile the target P4 program first." % args.bmv2_json
         parser.exit(1)
 
+    # Pass argument into main function
     main(args.p4info, args.bmv2_json)

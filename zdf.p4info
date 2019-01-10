@@ -1,0 +1,287 @@
+tables {
+  preamble {
+    id: 33555812
+    name: "MyIngress.boundTable"
+    alias: "boundTable"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv4.srcAddr"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16791810
+  }
+  action_refs {
+    id: 16812695
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33589447
+    name: "MyIngress.get_port"
+    alias: "get_port"
+  }
+  action_refs {
+    id: 16826385
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly()"
+    scope: DEFAULT_ONLY
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33567824
+    name: "MyIngress.SYN"
+    alias: "SYN"
+  }
+  action_refs {
+    id: 16796209
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly()"
+    scope: DEFAULT_ONLY
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33572849
+    name: "MyIngress.ACK"
+    alias: "ACK"
+  }
+  action_refs {
+    id: 16778608
+  }
+  action_refs {
+    id: 16827322
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly()"
+    scope: DEFAULT_ONLY
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33558590
+    name: "MyIngress.rib"
+    alias: "rib"
+  }
+  match_fields {
+    id: 1
+    name: "hdr.ipv4.dstAddr"
+    bitwidth: 32
+    match_type: LPM
+  }
+  action_refs {
+    id: 16826124
+  }
+  action_refs {
+    id: 16827322
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly()"
+    scope: DEFAULT_ONLY
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33589827
+    name: "MyIngress.interface"
+    alias: "interface"
+  }
+  match_fields {
+    id: 1
+    name: "meta.nhop_ipv4"
+    bitwidth: 32
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16837735
+  }
+  action_refs {
+    id: 16827322
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly()"
+    scope: DEFAULT_ONLY
+  }
+  size: 512
+}
+tables {
+  preamble {
+    id: 33592171
+    name: "MyIngress.fib"
+    alias: "fib"
+  }
+  match_fields {
+    id: 1
+    name: "standard_metadata.egress_spec"
+    bitwidth: 9
+    match_type: EXACT
+  }
+  action_refs {
+    id: 16824776
+  }
+  action_refs {
+    id: 16827322
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly()"
+    scope: DEFAULT_ONLY
+  }
+  size: 256
+}
+tables {
+  preamble {
+    id: 33617416
+    name: "MyIngress.dropTable"
+    alias: "dropTable"
+  }
+  action_refs {
+    id: 16827322
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly()"
+    scope: DEFAULT_ONLY
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33583208
+    name: "MyIngress.copy_to_cpu"
+    alias: "copy_to_cpu"
+  }
+  action_refs {
+    id: 16788717
+  }
+  size: 1
+}
+actions {
+  preamble {
+    id: 16800567
+    name: "NoAction"
+    alias: "NoAction"
+  }
+}
+actions {
+  preamble {
+    id: 16827322
+    name: "MyIngress._drop"
+    alias: "_drop"
+  }
+}
+actions {
+  preamble {
+    id: 16791810
+    name: "MyIngress.matchYes"
+    alias: "matchYes"
+  }
+}
+actions {
+  preamble {
+    id: 16812695
+    name: "MyIngress.matchNo"
+    alias: "matchNo"
+  }
+}
+actions {
+  preamble {
+    id: 16826385
+    name: "MyIngress.get_port_action"
+    alias: "get_port_action"
+  }
+}
+actions {
+  preamble {
+    id: 16796209
+    name: "MyIngress.syn_action"
+    alias: "syn_action"
+  }
+}
+actions {
+  preamble {
+    id: 16778608
+    name: "MyIngress.ack_action"
+    alias: "ack_action"
+  }
+}
+actions {
+  preamble {
+    id: 16826124
+    name: "MyIngress.set_nhop"
+    alias: "set_nhop"
+  }
+  params {
+    id: 1
+    name: "nhop_ipv4"
+    bitwidth: 32
+  }
+}
+actions {
+  preamble {
+    id: 16837735
+    name: "MyIngress.set_dmac"
+    alias: "set_dmac"
+  }
+  params {
+    id: 1
+    name: "dmac"
+    bitwidth: 48
+  }
+  params {
+    id: 2
+    name: "port"
+    bitwidth: 9
+  }
+}
+actions {
+  preamble {
+    id: 16824776
+    name: "MyIngress.rewrite_mac"
+    alias: "rewrite_mac"
+  }
+  params {
+    id: 1
+    name: "smac"
+    bitwidth: 48
+  }
+}
+actions {
+  preamble {
+    id: 16788717
+    name: "MyIngress.do_copy_to_cpu"
+    alias: "do_copy_to_cpu"
+  }
+}
+registers {
+  preamble {
+    id: 369162758
+    name: "srcAddr_register"
+    alias: "srcAddr_register"
+  }
+  type_spec {
+    bitstring {
+      bit {
+        bitwidth: 32
+      }
+    }
+  }
+  size: 32
+}
+type_info {
+}
