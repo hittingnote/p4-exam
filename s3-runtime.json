@@ -88,12 +88,6 @@
        "smac":"00:00:00:00:30:20"
       }
       },
-        {
-      "table": "MyIngress.boundTable",
-      "default_action": true,
-      "action_name": "MyIngress.matchNo",
-      "action_params": { }
-    },
     {
       "table": "MyIngress.boundTable",
       "match": {
