@@ -63,14 +63,26 @@ header tcp_t{
     bit<64> firstoption;
     bit<32> timestampval;
     bit<32> timestampreply;
-    bit<104> padding;
 }
 
-
+header csum_tcp_t {
+    bit<32> src_ip_addr;
+    bit<32> dst_ip_addr;
+    bit<16> protocol;
+    bit<16> tcp_len;
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<32> seq;
+    bit<32> ackNumber;
+    bit<16> hl;
+    bit<16> window
+    bit<16> urgentPointer;
+}
 
 #define REGISTER_SIZE 32
 
-/*register srcAddr_register {
+/*
+register srcAddr_register {
 	width : 16;
 	instance_count : REGISTER_SIZE;
 }*/
@@ -330,7 +342,7 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
              hdr.ipv4.hdrChecksum,
              HashAlgorithm.csum16);
 
-    bit<16> tcplen = ((bit<16>)hdr.ipv4.totalLen-(bit<16>)hdr.ipv4.ihl*4)/4;
+/*    bit<16> tcplen = ((bit<16>)hdr.ipv4.totalLen-(bit<16>)hdr.ipv4.ihl*4)/4;
     update_checksum_with_payload(
         hdr.tcp.isValid(),
         {
@@ -360,7 +372,7 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
         },
         hdr.tcp.checkSum,
         HashAlgorithm.csum16
-    );
+    );*/
      }
  }
 //#########################depaser##########################
