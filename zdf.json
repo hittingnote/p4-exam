@@ -5,7 +5,8 @@
       "id" : 0,
       "fields" : [
         ["tmp", 32, false],
-        ["tmp_0", 32, false],
+        ["tmp32_0", 32, false],
+        ["tmp16_0", 16, false],
         ["metadata.in_port", 9, false],
         ["metadata.out_port", 9, false],
         ["metadata.value", 9, false],
@@ -67,8 +68,7 @@
         ["protocol", 8, false],
         ["hdrChecksum", 16, false],
         ["srcAddr", 32, false],
-        ["dstAddr", 32, false],
-        ["floodFlags", 8, false]
+        ["dstAddr", 32, false]
       ]
     },
     {
@@ -90,8 +90,10 @@
         ["window", 16, false],
         ["checkSum", 16, false],
         ["urgentPointer", 16, false],
-        ["option", 24, false],
-        ["padding", 8, false]
+        ["firstoption", 64, false],
+        ["timestampval", 32, false],
+        ["timestampreply", 32, false],
+        ["padding", 104, false]
       ]
     }
   ],
@@ -253,7 +255,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 324,
+        "line" : 367,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -268,7 +270,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 89,
+        "line" : 93,
         "column" : 23,
         "source_fragment" : "srcAddr_register"
       },
@@ -282,7 +284,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 306,
+        "line" : 317,
         "column" : 5,
         "source_fragment" : "update_checksum( ..."
       },
@@ -333,6 +335,198 @@
           "value" : ["ipv4", "dstAddr"]
         }
       ]
+    },
+    {
+      "name" : "calc_0",
+      "id" : 1,
+      "source_info" : {
+        "filename" : "zdf.p4",
+        "line" : 334,
+        "column" : 4,
+        "source_fragment" : "update_checksum_with_payload( ..."
+      },
+      "algo" : "csum16",
+      "input" : [
+        {
+          "type" : "field",
+          "value" : ["ipv4", "srcAddr"]
+        },
+        {
+          "type" : "field",
+          "value" : ["ipv4", "dstAddr"]
+        },
+        {
+          "type" : "expression",
+          "value" : {
+            "op" : "&",
+            "left" : {
+              "type" : "field",
+              "value" : ["ipv4", "protocol"]
+            },
+            "right" : {
+              "type" : "hexstr",
+              "value" : "0xffff",
+              "bitwidth" : 16
+            }
+          }
+        },
+        {
+          "type" : "expression",
+          "value" : {
+            "op" : "&",
+            "left" : {
+              "type" : "expression",
+              "value" : {
+                "op" : ">>",
+                "left" : {
+                  "type" : "expression",
+                  "value" : {
+                    "op" : "&",
+                    "left" : {
+                      "type" : "expression",
+                      "value" : {
+                        "op" : "-",
+                        "left" : {
+                          "type" : "field",
+                          "value" : ["ipv4", "totalLen"]
+                        },
+                        "right" : {
+                          "type" : "expression",
+                          "value" : {
+                            "op" : "&",
+                            "left" : {
+                              "type" : "expression",
+                              "value" : {
+                                "op" : "<<",
+                                "left" : {
+                                  "type" : "expression",
+                                  "value" : {
+                                    "op" : "&",
+                                    "left" : {
+                                      "type" : "field",
+                                      "value" : ["ipv4", "ihl"]
+                                    },
+                                    "right" : {
+                                      "type" : "hexstr",
+                                      "value" : "0xffff",
+                                      "bitwidth" : 16
+                                    }
+                                  }
+                                },
+                                "right" : {
+                                  "type" : "hexstr",
+                                  "value" : "0x2",
+                                  "bitwidth" : 0
+                                }
+                              }
+                            },
+                            "right" : {
+                              "type" : "hexstr",
+                              "value" : "0xffff",
+                              "bitwidth" : 16
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "right" : {
+                      "type" : "hexstr",
+                      "value" : "0xffff",
+                      "bitwidth" : 16
+                    }
+                  }
+                },
+                "right" : {
+                  "type" : "hexstr",
+                  "value" : "0x2",
+                  "bitwidth" : 0
+                }
+              }
+            },
+            "right" : {
+              "type" : "hexstr",
+              "value" : "0xffff",
+              "bitwidth" : 16
+            }
+          }
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "srcPort"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "dstPort"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "seq"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "ackNumber"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "dataOffset"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "reserve"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "URG"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "ACK"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "PSH"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "RST"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "SYN"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "FIN"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "window"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "urgentPointer"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "firstoption"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "timestampval"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "timestampreply"]
+        },
+        {
+          "type" : "field",
+          "value" : ["tcp", "padding"]
+        },
+        {
+          "type" : "payload",
+          "value" : null
+        }
+      ]
     }
   ],
   "learn_lists" : [],
@@ -374,10 +568,21 @@
       "primitives" : []
     },
     {
-      "name" : "NoAction",
+      "name" : "MyIngress._drop",
       "id" : 6,
       "runtime_data" : [],
-      "primitives" : []
+      "primitives" : [
+        {
+          "op" : "drop",
+          "parameters" : [],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 135,
+            "column" : 1,
+            "source_fragment" : "mark_to_drop()"
+          }
+        }
+      ]
     },
     {
       "name" : "MyIngress._drop",
@@ -389,7 +594,7 @@
           "parameters" : [],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 131,
+            "line" : 135,
             "column" : 1,
             "source_fragment" : "mark_to_drop()"
           }
@@ -406,7 +611,7 @@
           "parameters" : [],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 131,
+            "line" : 135,
             "column" : 1,
             "source_fragment" : "mark_to_drop()"
           }
@@ -423,7 +628,7 @@
           "parameters" : [],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 131,
+            "line" : 135,
             "column" : 1,
             "source_fragment" : "mark_to_drop()"
           }
@@ -440,24 +645,7 @@
           "parameters" : [],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 131,
-            "column" : 1,
-            "source_fragment" : "mark_to_drop()"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "MyIngress._drop",
-      "id" : 11,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "drop",
-          "parameters" : [],
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 131,
+            "line" : 135,
             "column" : 1,
             "source_fragment" : "mark_to_drop()"
           }
@@ -466,7 +654,7 @@
     },
     {
       "name" : "MyIngress.matchYes",
-      "id" : 12,
+      "id" : 11,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -492,7 +680,7 @@
     },
     {
       "name" : "MyIngress.matchNo",
-      "id" : 13,
+      "id" : 12,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -518,7 +706,7 @@
     },
     {
       "name" : "MyIngress.get_port_action",
-      "id" : 14,
+      "id" : 13,
       "runtime_data" : [],
       "primitives" : [
         {
@@ -535,7 +723,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 152,
+            "line" : 156,
             "column" : 8,
             "source_fragment" : "meta.in_port = standard_metadata.ingress_port"
           }
@@ -544,6 +732,365 @@
     },
     {
       "name" : "MyIngress.syn_action",
+      "id" : 14,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata.value"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["scalars", "metadata.in_port"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0x001f"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 165,
+            "column" : 4,
+            "source_fragment" : "meta.value = meta.in_port % 32"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "&",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["scalars", "metadata.in_port"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x001f"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 167,
+            "column" : 27,
+            "source_fragment" : "(bit<32>)meta.value"
+          }
+        },
+        {
+          "op" : "register_write",
+          "parameters" : [
+            {
+              "type" : "register_array",
+              "value" : "srcAddr_register"
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 167,
+            "column" : 4,
+            "source_fragment" : "srcAddr_register.write((bit<32>)meta.value, (bit<32>)hdr.ipv4.srcAddr)"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp32_0"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 169,
+            "column" : 4,
+            "source_fragment" : "bit<32> tmp32 = hdr.ipv4.srcAddr;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 170,
+            "column" : 4,
+            "source_fragment" : "hdr.ipv4.srcAddr = hdr.ipv4.dstAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp32_0"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 171,
+            "column" : 4,
+            "source_fragment" : "hdr.ipv4.dstAddr = tmp32"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp16_0"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "srcPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 173,
+            "column" : 4,
+            "source_fragment" : "bit<16> tmp16 = hdr.tcp.srcPort;"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["tcp", "srcPort"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "dstPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 174,
+            "column" : 4,
+            "source_fragment" : "hdr.tcp.srcPort = (bit<16>)hdr.tcp.dstPort"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["tcp", "dstPort"]
+            },
+            {
+              "type" : "field",
+              "value" : ["scalars", "tmp16_0"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 175,
+            "column" : 4,
+            "source_fragment" : "hdr.tcp.dstPort = tmp16"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["tcp", "ACK"]
+            },
+            {
+              "type" : "hexstr",
+              "value" : "0x01"
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 178,
+            "column" : 4,
+            "source_fragment" : "hdr.tcp.ACK = 1"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["tcp", "ackNumber"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["tcp", "seq"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x00000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 179,
+            "column" : 4,
+            "source_fragment" : "hdr.tcp.ackNumber = hdr.tcp.seq + 1"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["tcp", "timestampreply"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "timestampval"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 181,
+            "column" : 4,
+            "source_fragment" : "hdr.tcp.timestampreply = hdr.tcp.timestampval"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["tcp", "timestampval"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["tcp", "timestampval"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x00000001"
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffffffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 182,
+            "column" : 4,
+            "source_fragment" : "hdr.tcp.timestampval = hdr.tcp.timestampval + 1"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "egress_spec"]
+            },
+            {
+              "type" : "field",
+              "value" : ["standard_metadata", "ingress_port"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 184,
+            "column" : 4,
+            "source_fragment" : "standard_metadata.egress_spec=standard_metadata.ingress_port"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "MyIngress.ack_action",
       "id" : 15,
       "runtime_data" : [],
       "primitives" : [
@@ -574,204 +1121,16 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 161,
+            "line" : 195,
             "column" : 4,
             "source_fragment" : "meta.value = meta.in_port % 32"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "&",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["scalars", "metadata.in_port"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x001f"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xffffffff"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 165,
-            "column" : 27,
-            "source_fragment" : "(bit<32>)meta.value"
-          }
-        },
-        {
-          "op" : "register_write",
-          "parameters" : [
-            {
-              "type" : "register_array",
-              "value" : "srcAddr_register"
-            },
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp"]
-            },
-            {
-              "type" : "field",
-              "value" : ["ipv4", "srcAddr"]
-            }
-          ],
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 165,
-            "column" : 4,
-            "source_fragment" : "srcAddr_register.write((bit<32>)meta.value, (bit<32>)hdr.ipv4.srcAddr)"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["standard_metadata", "egress_spec"]
-            },
-            {
-              "type" : "field",
-              "value" : ["standard_metadata", "ingress_port"]
-            }
-          ],
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 166,
-            "column" : 4,
-            "source_fragment" : "standard_metadata.egress_spec=standard_metadata.ingress_port"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "MyIngress.ack_action",
-      "id" : 16,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "metadata.value"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "field",
-                    "value" : ["scalars", "metadata.in_port"]
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x001f"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 175,
-            "column" : 4,
-            "source_fragment" : "meta.value = meta.in_port % 32"
-          }
-        },
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp_0"]
-            },
-            {
-              "type" : "expression",
-              "value" : {
-                "type" : "expression",
-                "value" : {
-                  "op" : "&",
-                  "left" : {
-                    "type" : "expression",
-                    "value" : {
-                      "op" : "&",
-                      "left" : {
-                        "type" : "field",
-                        "value" : ["scalars", "metadata.in_port"]
-                      },
-                      "right" : {
-                        "type" : "hexstr",
-                        "value" : "0x001f"
-                      }
-                    }
-                  },
-                  "right" : {
-                    "type" : "hexstr",
-                    "value" : "0xffffffff"
-                  }
-                }
-              }
-            }
-          ],
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 178,
-            "column" : 40,
-            "source_fragment" : "(bit<32>)meta.value"
-          }
-        },
-        {
-          "op" : "register_read",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["scalars", "metadata.srcAddr"]
-            },
-            {
-              "type" : "register_array",
-              "value" : "srcAddr_register"
-            },
-            {
-              "type" : "field",
-              "value" : ["scalars", "tmp_0"]
-            }
-          ],
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 178,
-            "column" : 4,
-            "source_fragment" : "srcAddr_register.read(meta.srcAddr, (bit<32>)meta.value)"
           }
         }
       ]
     },
     {
       "name" : "MyIngress.set_nhop",
-      "id" : 17,
+      "id" : 16,
       "runtime_data" : [
         {
           "name" : "nhop_ipv4",
@@ -793,7 +1152,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 190,
+            "line" : 207,
             "column" : 4,
             "source_fragment" : "meta.nhop_ipv4=nhop_ipv4"
           }
@@ -835,7 +1194,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 191,
+            "line" : 208,
             "column" : 4,
             "source_fragment" : "hdr.ipv4.ttl=hdr.ipv4.ttl-1"
           }
@@ -844,7 +1203,7 @@
     },
     {
       "name" : "MyIngress.set_dmac",
-      "id" : 18,
+      "id" : 17,
       "runtime_data" : [
         {
           "name" : "dmac",
@@ -870,7 +1229,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 207,
+            "line" : 224,
             "column" : 4,
             "source_fragment" : "hdr.ethernet.dstAddr=dmac"
           }
@@ -889,7 +1248,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 208,
+            "line" : 225,
             "column" : 4,
             "source_fragment" : "standard_metadata.egress_spec=port"
           }
@@ -898,7 +1257,7 @@
     },
     {
       "name" : "MyIngress.rewrite_mac",
-      "id" : 19,
+      "id" : 18,
       "runtime_data" : [
         {
           "name" : "smac",
@@ -920,35 +1279,9 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 223,
+            "line" : 240,
             "column" : 4,
             "source_fragment" : "hdr.ethernet.srcAddr=smac"
-          }
-        }
-      ]
-    },
-    {
-      "name" : "MyIngress.do_copy_to_cpu",
-      "id" : 20,
-      "runtime_data" : [],
-      "primitives" : [
-        {
-          "op" : "assign",
-          "parameters" : [
-            {
-              "type" : "field",
-              "value" : ["standard_metadata", "egress_spec"]
-            },
-            {
-              "type" : "hexstr",
-              "value" : "0x00ff"
-            }
-          ],
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 249,
-            "column" : 2,
-            "source_fragment" : "standard_metadata.egress_spec = 255"
           }
         }
       ]
@@ -960,7 +1293,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 126,
+        "line" : 130,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -971,7 +1304,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 139,
+            "line" : 143,
             "column" : 6,
             "source_fragment" : "boundTable"
           },
@@ -989,7 +1322,7 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [12, 13],
+          "action_ids" : [11, 12],
           "actions" : ["MyIngress.matchYes", "MyIngress.matchNo"],
           "base_default_next" : "MyIngress.get_port",
           "next_tables" : {
@@ -997,7 +1330,7 @@
             "MyIngress.matchNo" : "MyIngress.get_port"
           },
           "default_entry" : {
-            "action_id" : 13,
+            "action_id" : 12,
             "action_const" : false,
             "action_data" : [],
             "action_entry_const" : false
@@ -1008,7 +1341,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 154,
+            "line" : 158,
             "column" : 6,
             "source_fragment" : "get_port"
           },
@@ -1019,7 +1352,7 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [14, 0],
+          "action_ids" : [13, 0],
           "actions" : ["MyIngress.get_port_action", "NoAction"],
           "base_default_next" : "node_6",
           "next_tables" : {
@@ -1038,7 +1371,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 168,
+            "line" : 187,
             "column" : 6,
             "source_fragment" : "SYN"
           },
@@ -1049,15 +1382,14 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [15, 1],
-          "actions" : ["MyIngress.syn_action", "NoAction"],
+          "action_ids" : [14],
+          "actions" : ["MyIngress.syn_action"],
           "base_default_next" : null,
           "next_tables" : {
-            "MyIngress.syn_action" : null,
-            "NoAction" : null
+            "MyIngress.syn_action" : null
           },
           "default_entry" : {
-            "action_id" : 1,
+            "action_id" : 14,
             "action_const" : false,
             "action_data" : [],
             "action_entry_const" : false
@@ -1068,7 +1400,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 181,
+            "line" : 198,
             "column" : 6,
             "source_fragment" : "ACK"
           },
@@ -1079,45 +1411,16 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [16, 7, 2],
+          "action_ids" : [15, 6, 1],
           "actions" : ["MyIngress.ack_action", "MyIngress._drop", "NoAction"],
-          "base_default_next" : "node_11",
-          "next_tables" : {
-            "MyIngress.ack_action" : "node_11",
-            "MyIngress._drop" : "node_11",
-            "NoAction" : "node_11"
-          },
-          "default_entry" : {
-            "action_id" : 2,
-            "action_const" : false,
-            "action_data" : [],
-            "action_entry_const" : false
-          }
-        },
-        {
-          "name" : "MyIngress.copy_to_cpu",
-          "id" : 4,
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 252,
-            "column" : 6,
-            "source_fragment" : "copy_to_cpu"
-          },
-          "key" : [],
-          "match_type" : "exact",
-          "type" : "simple",
-          "max_size" : 1,
-          "with_counters" : false,
-          "support_timeout" : false,
-          "direct_meters" : null,
-          "action_ids" : [20],
-          "actions" : ["MyIngress.do_copy_to_cpu"],
           "base_default_next" : null,
           "next_tables" : {
-            "MyIngress.do_copy_to_cpu" : null
+            "MyIngress.ack_action" : null,
+            "MyIngress._drop" : null,
+            "NoAction" : null
           },
           "default_entry" : {
-            "action_id" : 20,
+            "action_id" : 1,
             "action_const" : false,
             "action_data" : [],
             "action_entry_const" : false
@@ -1125,10 +1428,10 @@
         },
         {
           "name" : "MyIngress.dropTable",
-          "id" : 5,
+          "id" : 4,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 236,
+            "line" : 253,
             "column" : 6,
             "source_fragment" : "dropTable"
           },
@@ -1139,7 +1442,7 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [11, 6],
+          "action_ids" : [10, 5],
           "actions" : ["MyIngress._drop", "NoAction"],
           "base_default_next" : null,
           "next_tables" : {
@@ -1147,7 +1450,7 @@
             "NoAction" : null
           },
           "default_entry" : {
-            "action_id" : 6,
+            "action_id" : 5,
             "action_const" : false,
             "action_data" : [],
             "action_entry_const" : false
@@ -1155,10 +1458,10 @@
         },
         {
           "name" : "MyIngress.rib",
-          "id" : 6,
+          "id" : 5,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 195,
+            "line" : 212,
             "column" : 6,
             "source_fragment" : "rib"
           },
@@ -1176,7 +1479,7 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [17, 8, 3],
+          "action_ids" : [16, 7, 2],
           "actions" : ["MyIngress.set_nhop", "MyIngress._drop", "NoAction"],
           "base_default_next" : "MyIngress.interface",
           "next_tables" : {
@@ -1185,7 +1488,7 @@
             "NoAction" : "MyIngress.interface"
           },
           "default_entry" : {
-            "action_id" : 3,
+            "action_id" : 2,
             "action_const" : false,
             "action_data" : [],
             "action_entry_const" : false
@@ -1193,10 +1496,10 @@
         },
         {
           "name" : "MyIngress.interface",
-          "id" : 7,
+          "id" : 6,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 211,
+            "line" : 228,
             "column" : 6,
             "source_fragment" : "interface"
           },
@@ -1214,7 +1517,7 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [18, 9, 4],
+          "action_ids" : [17, 8, 3],
           "actions" : ["MyIngress.set_dmac", "MyIngress._drop", "NoAction"],
           "base_default_next" : "MyIngress.fib",
           "next_tables" : {
@@ -1223,7 +1526,7 @@
             "NoAction" : "MyIngress.fib"
           },
           "default_entry" : {
-            "action_id" : 4,
+            "action_id" : 3,
             "action_const" : false,
             "action_data" : [],
             "action_entry_const" : false
@@ -1231,10 +1534,10 @@
         },
         {
           "name" : "MyIngress.fib",
-          "id" : 8,
+          "id" : 7,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 226,
+            "line" : 243,
             "column" : 6,
             "source_fragment" : "fib"
           },
@@ -1252,7 +1555,7 @@
           "with_counters" : false,
           "support_timeout" : false,
           "direct_meters" : null,
-          "action_ids" : [19, 10, 5],
+          "action_ids" : [18, 9, 4],
           "actions" : ["MyIngress.rewrite_mac", "MyIngress._drop", "NoAction"],
           "base_default_next" : null,
           "next_tables" : {
@@ -1261,7 +1564,7 @@
             "NoAction" : null
           },
           "default_entry" : {
-            "action_id" : 5,
+            "action_id" : 4,
             "action_const" : false,
             "action_data" : [],
             "action_entry_const" : false
@@ -1275,7 +1578,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 261,
+            "line" : 274,
             "column" : 7,
             "source_fragment" : "hdr.ipv4.ttl>0"
           },
@@ -1301,9 +1604,9 @@
           "id" : 1,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 264,
+            "line" : 276,
             "column" : 11,
-            "source_fragment" : "standard_metadata.ingress_port==PORT_ONE||standard_metadata.ingress_port==PORT_ONE"
+            "source_fragment" : "standard_metadata.ingress_port==PORT_ONE || standard_metadata.ingress_port==PORT_TWO || standard_metadata.ingress_port==PORT_THREE"
           },
           "expression" : {
             "type" : "expression",
@@ -1312,14 +1615,34 @@
               "left" : {
                 "type" : "expression",
                 "value" : {
-                  "op" : "==",
+                  "op" : "or",
                   "left" : {
-                    "type" : "field",
-                    "value" : ["standard_metadata", "ingress_port"]
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "==",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["standard_metadata", "ingress_port"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x0001"
+                      }
+                    }
                   },
                   "right" : {
-                    "type" : "hexstr",
-                    "value" : "0x0001"
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "==",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["standard_metadata", "ingress_port"]
+                      },
+                      "right" : {
+                        "type" : "hexstr",
+                        "value" : "0x0002"
+                      }
+                    }
                   }
                 }
               },
@@ -1333,7 +1656,7 @@
                   },
                   "right" : {
                     "type" : "hexstr",
-                    "value" : "0x0001"
+                    "value" : "0x0003"
                   }
                 }
               }
@@ -1347,7 +1670,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 267,
+            "line" : 279,
             "column" : 15,
             "source_fragment" : "meta.flag==ZERO"
           },
@@ -1373,7 +1696,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 268,
+            "line" : 280,
             "column" : 19,
             "source_fragment" : "hdr.tcp.SYN==1"
           },
@@ -1399,7 +1722,7 @@
           "id" : 4,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 272,
+            "line" : 283,
             "column" : 24,
             "source_fragment" : "hdr.tcp.ACK==1"
           },
@@ -1419,32 +1742,6 @@
           },
           "true_next" : "MyIngress.ACK",
           "false_next" : "MyIngress.dropTable"
-        },
-        {
-          "name" : "node_11",
-          "id" : 5,
-          "source_info" : {
-            "filename" : "zdf.p4",
-            "line" : 274,
-            "column" : 23,
-            "source_fragment" : "meta.srcAddr==hdr.ipv4.srcAddr"
-          },
-          "expression" : {
-            "type" : "expression",
-            "value" : {
-              "op" : "==",
-              "left" : {
-                "type" : "field",
-                "value" : ["scalars", "metadata.srcAddr"]
-              },
-              "right" : {
-                "type" : "field",
-                "value" : ["ipv4", "srcAddr"]
-              }
-            }
-          },
-          "false_next" : null,
-          "true_next" : "MyIngress.copy_to_cpu"
         }
       ]
     },
@@ -1453,7 +1750,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 297,
+        "line" : 308,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -1469,7 +1766,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 306,
+        "line" : 317,
         "column" : 5,
         "source_fragment" : "update_checksum( ..."
       },
@@ -1486,6 +1783,32 @@
           "right" : {
             "type" : "field",
             "value" : ["ipv4", "$valid$"]
+          }
+        }
+      }
+    },
+    {
+      "name" : "cksum_0",
+      "id" : 1,
+      "source_info" : {
+        "filename" : "zdf.p4",
+        "line" : 334,
+        "column" : 4,
+        "source_fragment" : "update_checksum_with_payload( ..."
+      },
+      "target" : ["tcp", "checkSum"],
+      "type" : "generic",
+      "calculation" : "calc_0",
+      "verify" : false,
+      "update" : true,
+      "if_cond" : {
+        "type" : "expression",
+        "value" : {
+          "op" : "d2b",
+          "left" : null,
+          "right" : {
+            "type" : "field",
+            "value" : ["tcp", "$valid$"]
           }
         }
       }

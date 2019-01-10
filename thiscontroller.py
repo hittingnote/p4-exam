@@ -104,10 +104,17 @@ def main(p4info_file_path, bmv2_file_path):
             address='127.0.0.1:50051',
             device_id=0,
             proto_dump_file='logs/s1-p4runtime-requests.txt')
-
+        """
+        s2 = p4runtime_lib.bmv2.Bmv2SwitchConnection(
+            name='s2',
+            address='127.0.0.1:50052',
+            device_id=1,
+            proto_dump_file='logs/s2-p4runtime-requests.txt')
+        """
         # 傳送 master arbitration update message 來建立，使得這個 controller 成為
         # master (required by P4Runtime before performing any other write operation)
         s1.MasterArbitrationUpdate()
+#        s2.MasterArbitrationUpdate()
 
         # 安裝目標 P4 程式到 switch 上
 #        s1.SetForwardingPipelineConfig(p4info=p4info_helper.p4info,
@@ -125,7 +132,19 @@ def main(p4info_file_path, bmv2_file_path):
                     metadata_id = meta.metadata_id
                     value = meta.value
 
-                pkt.show2() 
+                pkt.show2()
+            """
+            packetin = s2.PacketIn()
+            if packetin.WhichOneof('update') == 'packet':
+                packet = packetin.packet.payload
+                pkt = Ether(_pkt=packet)
+                metadata = packetin.packet.metadata
+                for meta in metadata:
+                    metadata_id = meta.metadata_id
+                    value = meta.value
+
+                pkt.show2()
+            """
     except KeyboardInterrupt:
         # using ctrl + c to exit
         print "Shutting down."

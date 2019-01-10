@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-#define __IS_SERVER
+//#define __IS_SERVER
 
 using namespace std;
 
