@@ -307,7 +307,7 @@ apply{
 	csum_tcp_header.dstPort = hdr.tcp.dstPort;
 	csum_tcp_header.seq = hdr.tcp.seq;
 	csum_tcp_header.ackNumber = hdr.tcp.ackNumber;
-	csum_tcp_header.hl = hdr.tcp.dataOffset<<12 + hdr.tcp.reserve<<6 + hdr.tcp.URG<<5 + hdr.tcp.ACK<<4 + hdr.tcp.PUSH<<3 + hdr.tcp.RST<<2 + hdr.tcp.SYN<<1 + hdr.tcp.FIN;
+	csum_tcp_header.hl = (bit<16>)hdr.tcp.dataOffset<<12 + (bit<16>)hdr.tcp.reserve<<6 + (bit<16>)hdr.tcp.URG<<5 + (bit<16>)hdr.tcp.ACK<<4 + (bit<16>)hdr.tcp.PUSH<<3 + (bit<16>)hdr.tcp.RST<<2 + (bit<16>)hdr.tcp.SYN<<1 + (bit<16>)hdr.tcp.FIN;
 	csum_tcp_header.window = hdr.tcp.window;
 	csum_tcp_header.urgentPointer = hdr.tcp.urgentPointer;
 */
