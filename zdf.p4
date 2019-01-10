@@ -141,8 +141,8 @@ parser MyParser(packet_in packet,
 	meta.csum_tcp_header.seq = hdr.tcp.seq;
 	meta.csum_tcp_header.ackNumber = hdr.tcp.ackNumber;
 //	meta.csum_tcp_header.hl = hdr.tcp.dataOffset<<12 + hdr.tcp.reserve<<6 + hdr.tcp.URG<<5 + hdr.tcp.ACK<<4 + hdr.tcp.PSH<<3 + hdr.tcp.RST<<2 + hdr.tcp.SYN<<1 + hdr.tcp.FIN;
-//	meta.csum_tcp_header.hl = hdr.tcp.dataOffset*4096 + hdr.tcp.reserve*64 + hdr.tcp.URG*32 + hdr.tcp.ACK*16 + hdr.tcp.PSH*8 + hdr.tcp.RST*4 + hdr.tcp.SYN*2 + hdr.tcp.FIN;
-	meta.csum_tcp_header.hl = (bit<16>)hdr.tcp.dataOffset<<12 + (bit<16>)hdr.tcp.reserve<<6 + (bit<16>)hdr.tcp.URG<<5 + (bit<16>)hdr.tcp.ACK<<4 + (bit<16>)hdr.tcp.PSH<<3 + (bit<16>)hdr.tcp.RST<<2 + (bit<16>)hdr.tcp.SYN<<1 + (bit<16>)hdr.tcp.FIN;
+	meta.csum_tcp_header.hl = (bit<16>)hdr.tcp.dataOffset*4096 + (bit<16>)hdr.tcp.reserve*64 + (bit<16>)hdr.tcp.URG*32 + (bit<16>)hdr.tcp.ACK*16 + (bit<16>)hdr.tcp.PSH*8 + (bit<16>)hdr.tcp.RST*4 + (bit<16>)hdr.tcp.SYN*2 + (bit<16>)hdr.tcp.FIN;
+//	meta.csum_tcp_header.hl = (bit<16>)hdr.tcp.dataOffset<<12 + (bit<16>)hdr.tcp.reserve<<6 + (bit<16>)hdr.tcp.URG<<5 + (bit<16>)hdr.tcp.ACK<<4 + (bit<16>)hdr.tcp.PSH<<3 + (bit<16>)hdr.tcp.RST<<2 + (bit<16>)hdr.tcp.SYN<<1 + (bit<16>)hdr.tcp.FIN;
 	meta.csum_tcp_header.window = hdr.tcp.window;
 	meta.csum_tcp_header.urgentPointer = hdr.tcp.urgentPointer;
 	
