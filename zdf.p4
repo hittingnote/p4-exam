@@ -347,13 +347,14 @@ apply{
 }
 //##########################Egress##########################
 control MyEgress(inout headers hdr,
+                  inout csum_tcp_t csum_tcp_header,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata)
 {
 apply{}
 }
 //############################copmputerChecksum#############33
-control MyComputeChecksum(inout csum_tcp_t csum_tcp_header, inout headers  hdr, inout metadata meta) {
+control MyComputeChecksum(inout headers  hdr, inout csum_tcp_t csum_tcp_header, inout metadata meta) {
       apply {
      update_checksum(
          hdr.ipv4.isValid(),
