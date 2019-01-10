@@ -94,6 +94,7 @@ struct metadata{
       bit<32>nhop_ipv4;
       bit<32>srcAddr;
       bit<1>flag;
+     csum_tcp_t tcp_csum_header;
 }
 
 struct headers {
@@ -102,13 +103,10 @@ struct headers {
     tcp_t      tcp;
 }
 
-//csum_tcp_t csum_tcp_header;
-
 register <bit<32>>(REGISTER_SIZE) srcAddr_register;
 //#############################################解析######################################3
 parser MyParser(packet_in packet,
                 out headers hdr,
-		out csum_tcp_t csum_tcp_header,
                 inout metadata meta,
                 inout standard_metadata_t standard_metadata){
     state start {
@@ -134,17 +132,17 @@ parser MyParser(packet_in packet,
     state parse_tcp {
         packet.extract(hdr.tcp);
 	
-	csum_tcp_header.src_ip_addr = hdr.ipv4.srcAddr;
-	csum_tcp_header.dst_ip_addr = hdr.ipv4.dstAddr;
-	csum_tcp_header.protocol = (bit<16>)hdr.ipv4.protocol;
-	csum_tcp_header.tcp_len = ((bit<16>)hdr.ipv4.totalLen - (bit<16>)hdr.ipv4.ihl*4) / 4;
-	csum_tcp_header.srcPort = hdr.tcp.srcPort;
-	csum_tcp_header.dstPort = hdr.tcp.dstPort;
-	csum_tcp_header.seq = hdr.tcp.seq;
-	csum_tcp_header.ackNumber = hdr.tcp.ackNumber;
-	csum_tcp_header.hl = hdr.tcp.dataOffset<<12 + hdr.tcp.reserve<<6 + hdr.tcp.URG<<5 + hdr.tcp.ACK<<4 + hdr.tcp.PUSH<<3 + hdr.tcp.RST<<2 + hdr.tcp.SYN<<1 + hdr.tcp.FIN;
-	csum_tcp_header.window = hdr.tcp.window;
-	csum_tcp_header.urgentPointer = hdr.tcp.urgentPointer;
+	meta.csum_tcp_header.src_ip_addr = hdr.ipv4.srcAddr;
+	meta.csum_tcp_header.dst_ip_addr = hdr.ipv4.dstAddr;
+	meta.csum_tcp_header.protocol = (bit<16>)hdr.ipv4.protocol;
+	meta.csum_tcp_header.tcp_len = ((bit<16>)hdr.ipv4.totalLen - (bit<16>)hdr.ipv4.ihl*4) / 4;
+	meta.csum_tcp_header.srcPort = hdr.tcp.srcPort;
+	meta.csum_tcp_header.dstPort = hdr.tcp.dstPort;
+	meta.csum_tcp_header.seq = hdr.tcp.seq;
+	meta.csum_tcp_header.ackNumber = hdr.tcp.ackNumber;
+	meta.csum_tcp_header.hl = hdr.tcp.dataOffset<<12 + hdr.tcp.reserve<<6 + hdr.tcp.URG<<5 + hdr.tcp.ACK<<4 + hdr.tcp.PUSH<<3 + hdr.tcp.RST<<2 + hdr.tcp.SYN<<1 + hdr.tcp.FIN;
+	meta.csum_tcp_header.window = hdr.tcp.window;
+	meta.csum_tcp_header.urgentPointer = hdr.tcp.urgentPointer;
 	
         transition accept;
     }
@@ -347,14 +345,13 @@ apply{
 }
 //##########################Egress##########################
 control MyEgress(inout headers hdr,
-                  inout csum_tcp_t csum_tcp_header,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata)
 {
 apply{}
 }
 //############################copmputerChecksum#############33
-control MyComputeChecksum(inout headers  hdr, inout csum_tcp_t csum_tcp_header, inout metadata meta) {
+control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
       apply {
      update_checksum(
          hdr.ipv4.isValid(),
@@ -375,17 +372,17 @@ control MyComputeChecksum(inout headers  hdr, inout csum_tcp_t csum_tcp_header, 
 	update_checksum_with_payload(
 		hdr.tcp.isValid(),
 		{
-			csum_tcp_header.src_ip_addr,
-			csum_tcp_header.dst_ip_addr,
-			csum_tcp_header.protocol,
-			csum_tcp_header.tcp_len,
-			csum_tcp_header.srcPort,
-			csum_tcp_header.dstPort,
-			csum_tcp_header.seq,
-			csum_tcp_header.ackNumber,
-			csum_tcp_header.hl,
-			csum_tcp_header.window,
-			csum_tcp_header.urgentPointer,
+			meta.csum_tcp_header.src_ip_addr,
+			meta.csum_tcp_header.dst_ip_addr,
+			meta.csum_tcp_header.protocol,
+			meta.csum_tcp_header.tcp_len,
+			meta.csum_tcp_header.srcPort,
+			meta.csum_tcp_header.dstPort,
+			meta.csum_tcp_header.seq,
+			meta.csum_tcp_header.ackNumber,
+			meta.csum_tcp_header.hl,
+			meta.csum_tcp_header.window,
+			meta.csum_tcp_header.urgentPointer,
 			hdr.tcp.firstoption,
 			hdr.tcp.timestampval,
 			hdr.tcp.timestampreply
