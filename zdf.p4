@@ -102,7 +102,7 @@ struct headers {
     tcp_t      tcp;
 }
 
-csum_tcp_t csum_tcp_header;
+//csum_tcp_t csum_tcp_header;
 
 register <bit<32>>(REGISTER_SIZE) srcAddr_register;
 //#############################################解析######################################3
@@ -137,7 +137,7 @@ parser MyParser(packet_in packet,
 	csum_tcp_header.src_ip_addr = hdr.ipv4.srcAddr;
 	csum_tcp_header.dst_ip_addr = hdr.ipv4.dstAddr;
 	csum_tcp_header.protocol = (bit<16>)hdr.ipv4.protocol;
-	csum_tcp_header.tcp_len = (hdr.ipv4.totalLen - hdr.ipv4.ihl*4) / 4;
+	csum_tcp_header.tcp_len = ((bit<16>)hdr.ipv4.totalLen - (bit<16>)hdr.ipv4.ihl*4) / 4;
 	csum_tcp_header.srcPort = hdr.tcp.srcPort;
 	csum_tcp_header.dstPort = hdr.tcp.dstPort;
 	csum_tcp_header.seq = hdr.tcp.seq;
@@ -385,7 +385,7 @@ control MyComputeChecksum(inout csum_tcp_t csum_tcp_header, inout headers  hdr, 
 			csum_tcp_header.hl,
 			csum_tcp_header.window,
 			csum_tcp_header.urgentPointer,
-			hdr.tcp.firstoption;
+			hdr.tcp.firstoption,
 			hdr.tcp.timestampval,
 			hdr.tcp.timestampreply
 		},
