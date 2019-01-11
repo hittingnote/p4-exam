@@ -7,12 +7,23 @@
         ["tmp", 32, false],
         ["tmp32_0", 32, false],
         ["tmp16_0", 16, false],
-        ["metadata.in_port", 9, false],
-        ["metadata.out_port", 9, false],
-        ["metadata.value", 9, false],
-        ["metadata.nhop_ipv4", 32, false],
-        ["metadata.srcAddr", 32, false],
-        ["metadata.flag", 1, false],
+        ["metadata._in_port0", 9, false],
+        ["metadata._out_port1", 9, false],
+        ["metadata._value2", 9, false],
+        ["metadata._nhop_ipv43", 32, false],
+        ["metadata._srcAddr4", 32, false],
+        ["metadata._flag5", 1, false],
+        ["metadata._csum_tcp_header_src_ip_addr6", 32, false],
+        ["metadata._csum_tcp_header_dst_ip_addr7", 32, false],
+        ["metadata._csum_tcp_header_protocol8", 16, false],
+        ["metadata._csum_tcp_header_tcp_len9", 16, false],
+        ["metadata._csum_tcp_header_srcPort10", 16, false],
+        ["metadata._csum_tcp_header_dstPort11", 16, false],
+        ["metadata._csum_tcp_header_seq12", 32, false],
+        ["metadata._csum_tcp_header_ackNumber13", 32, false],
+        ["metadata._csum_tcp_header_hl14", 16, false],
+        ["metadata._csum_tcp_header_window15", 16, false],
+        ["metadata._csum_tcp_header_urgentPointer16", 16, false],
         ["_padding_0", 4, false]
       ]
     },
@@ -92,8 +103,7 @@
         ["urgentPointer", 16, false],
         ["firstoption", 64, false],
         ["timestampval", 32, false],
-        ["timestampreply", 32, false],
-        ["padding", 104, false]
+        ["timestampreply", 32, false]
       ]
     }
   ],
@@ -255,7 +265,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 367,
+        "line" : 390,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -270,7 +280,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 93,
+        "line" : 100,
         "column" : 23,
         "source_fragment" : "srcAddr_register"
       },
@@ -284,7 +294,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 317,
+        "line" : 349,
         "column" : 5,
         "source_fragment" : "update_checksum( ..."
       },
@@ -341,170 +351,55 @@
       "id" : 1,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 334,
-        "column" : 4,
+        "line" : 365,
+        "column" : 1,
         "source_fragment" : "update_checksum_with_payload( ..."
       },
       "algo" : "csum16",
       "input" : [
         {
           "type" : "field",
-          "value" : ["ipv4", "srcAddr"]
+          "value" : ["scalars", "metadata._csum_tcp_header_src_ip_addr6"]
         },
         {
           "type" : "field",
-          "value" : ["ipv4", "dstAddr"]
-        },
-        {
-          "type" : "expression",
-          "value" : {
-            "op" : "&",
-            "left" : {
-              "type" : "field",
-              "value" : ["ipv4", "protocol"]
-            },
-            "right" : {
-              "type" : "hexstr",
-              "value" : "0xffff",
-              "bitwidth" : 16
-            }
-          }
-        },
-        {
-          "type" : "expression",
-          "value" : {
-            "op" : "&",
-            "left" : {
-              "type" : "expression",
-              "value" : {
-                "op" : ">>",
-                "left" : {
-                  "type" : "expression",
-                  "value" : {
-                    "op" : "&",
-                    "left" : {
-                      "type" : "expression",
-                      "value" : {
-                        "op" : "-",
-                        "left" : {
-                          "type" : "field",
-                          "value" : ["ipv4", "totalLen"]
-                        },
-                        "right" : {
-                          "type" : "expression",
-                          "value" : {
-                            "op" : "&",
-                            "left" : {
-                              "type" : "expression",
-                              "value" : {
-                                "op" : "<<",
-                                "left" : {
-                                  "type" : "expression",
-                                  "value" : {
-                                    "op" : "&",
-                                    "left" : {
-                                      "type" : "field",
-                                      "value" : ["ipv4", "ihl"]
-                                    },
-                                    "right" : {
-                                      "type" : "hexstr",
-                                      "value" : "0xffff",
-                                      "bitwidth" : 16
-                                    }
-                                  }
-                                },
-                                "right" : {
-                                  "type" : "hexstr",
-                                  "value" : "0x2",
-                                  "bitwidth" : 0
-                                }
-                              }
-                            },
-                            "right" : {
-                              "type" : "hexstr",
-                              "value" : "0xffff",
-                              "bitwidth" : 16
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "right" : {
-                      "type" : "hexstr",
-                      "value" : "0xffff",
-                      "bitwidth" : 16
-                    }
-                  }
-                },
-                "right" : {
-                  "type" : "hexstr",
-                  "value" : "0x2",
-                  "bitwidth" : 0
-                }
-              }
-            },
-            "right" : {
-              "type" : "hexstr",
-              "value" : "0xffff",
-              "bitwidth" : 16
-            }
-          }
+          "value" : ["scalars", "metadata._csum_tcp_header_dst_ip_addr7"]
         },
         {
           "type" : "field",
-          "value" : ["tcp", "srcPort"]
+          "value" : ["scalars", "metadata._csum_tcp_header_protocol8"]
         },
         {
           "type" : "field",
-          "value" : ["tcp", "dstPort"]
+          "value" : ["scalars", "metadata._csum_tcp_header_tcp_len9"]
         },
         {
           "type" : "field",
-          "value" : ["tcp", "seq"]
+          "value" : ["scalars", "metadata._csum_tcp_header_srcPort10"]
         },
         {
           "type" : "field",
-          "value" : ["tcp", "ackNumber"]
+          "value" : ["scalars", "metadata._csum_tcp_header_dstPort11"]
         },
         {
           "type" : "field",
-          "value" : ["tcp", "dataOffset"]
+          "value" : ["scalars", "metadata._csum_tcp_header_seq12"]
         },
         {
           "type" : "field",
-          "value" : ["tcp", "reserve"]
+          "value" : ["scalars", "metadata._csum_tcp_header_ackNumber13"]
         },
         {
           "type" : "field",
-          "value" : ["tcp", "URG"]
+          "value" : ["scalars", "metadata._csum_tcp_header_hl14"]
         },
         {
           "type" : "field",
-          "value" : ["tcp", "ACK"]
+          "value" : ["scalars", "metadata._csum_tcp_header_window15"]
         },
         {
           "type" : "field",
-          "value" : ["tcp", "PSH"]
-        },
-        {
-          "type" : "field",
-          "value" : ["tcp", "RST"]
-        },
-        {
-          "type" : "field",
-          "value" : ["tcp", "SYN"]
-        },
-        {
-          "type" : "field",
-          "value" : ["tcp", "FIN"]
-        },
-        {
-          "type" : "field",
-          "value" : ["tcp", "window"]
-        },
-        {
-          "type" : "field",
-          "value" : ["tcp", "urgentPointer"]
+          "value" : ["scalars", "metadata._csum_tcp_header_urgentPointer16"]
         },
         {
           "type" : "field",
@@ -517,10 +412,6 @@
         {
           "type" : "field",
           "value" : ["tcp", "timestampreply"]
-        },
-        {
-          "type" : "field",
-          "value" : ["tcp", "padding"]
         },
         {
           "type" : "payload",
@@ -577,7 +468,7 @@
           "parameters" : [],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 135,
+            "line" : 155,
             "column" : 1,
             "source_fragment" : "mark_to_drop()"
           }
@@ -594,7 +485,7 @@
           "parameters" : [],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 135,
+            "line" : 155,
             "column" : 1,
             "source_fragment" : "mark_to_drop()"
           }
@@ -611,7 +502,7 @@
           "parameters" : [],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 135,
+            "line" : 155,
             "column" : 1,
             "source_fragment" : "mark_to_drop()"
           }
@@ -628,7 +519,7 @@
           "parameters" : [],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 135,
+            "line" : 155,
             "column" : 1,
             "source_fragment" : "mark_to_drop()"
           }
@@ -645,7 +536,7 @@
           "parameters" : [],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 135,
+            "line" : 155,
             "column" : 1,
             "source_fragment" : "mark_to_drop()"
           }
@@ -662,7 +553,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "metadata.flag"]
+              "value" : ["scalars", "metadata._flag5"]
             },
             {
               "type" : "hexstr",
@@ -688,7 +579,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "metadata.flag"]
+              "value" : ["scalars", "metadata._flag5"]
             },
             {
               "type" : "hexstr",
@@ -714,7 +605,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "metadata.in_port"]
+              "value" : ["scalars", "metadata._in_port0"]
             },
             {
               "type" : "field",
@@ -723,7 +614,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 156,
+            "line" : 176,
             "column" : 8,
             "source_fragment" : "meta.in_port = standard_metadata.ingress_port"
           }
@@ -740,7 +631,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "metadata.value"]
+              "value" : ["scalars", "metadata._value2"]
             },
             {
               "type" : "expression",
@@ -750,7 +641,7 @@
                   "op" : "&",
                   "left" : {
                     "type" : "field",
-                    "value" : ["scalars", "metadata.in_port"]
+                    "value" : ["scalars", "metadata._in_port0"]
                   },
                   "right" : {
                     "type" : "hexstr",
@@ -762,7 +653,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 165,
+            "line" : 185,
             "column" : 4,
             "source_fragment" : "meta.value = meta.in_port % 32"
           }
@@ -786,7 +677,7 @@
                       "op" : "&",
                       "left" : {
                         "type" : "field",
-                        "value" : ["scalars", "metadata.in_port"]
+                        "value" : ["scalars", "metadata._in_port0"]
                       },
                       "right" : {
                         "type" : "hexstr",
@@ -804,7 +695,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 167,
+            "line" : 187,
             "column" : 27,
             "source_fragment" : "(bit<32>)meta.value"
           }
@@ -827,7 +718,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 167,
+            "line" : 187,
             "column" : 4,
             "source_fragment" : "srcAddr_register.write((bit<32>)meta.value, (bit<32>)hdr.ipv4.srcAddr)"
           }
@@ -846,7 +737,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 169,
+            "line" : 189,
             "column" : 4,
             "source_fragment" : "bit<32> tmp32 = hdr.ipv4.srcAddr;"
           }
@@ -865,7 +756,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 170,
+            "line" : 190,
             "column" : 4,
             "source_fragment" : "hdr.ipv4.srcAddr = hdr.ipv4.dstAddr"
           }
@@ -884,7 +775,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 171,
+            "line" : 191,
             "column" : 4,
             "source_fragment" : "hdr.ipv4.dstAddr = tmp32"
           }
@@ -903,7 +794,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 173,
+            "line" : 193,
             "column" : 4,
             "source_fragment" : "bit<16> tmp16 = hdr.tcp.srcPort;"
           }
@@ -922,7 +813,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 174,
+            "line" : 194,
             "column" : 4,
             "source_fragment" : "hdr.tcp.srcPort = (bit<16>)hdr.tcp.dstPort"
           }
@@ -941,7 +832,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 175,
+            "line" : 195,
             "column" : 4,
             "source_fragment" : "hdr.tcp.dstPort = tmp16"
           }
@@ -960,7 +851,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 178,
+            "line" : 198,
             "column" : 4,
             "source_fragment" : "hdr.tcp.ACK = 1"
           }
@@ -1002,7 +893,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 179,
+            "line" : 199,
             "column" : 4,
             "source_fragment" : "hdr.tcp.ackNumber = hdr.tcp.seq + 1"
           }
@@ -1021,7 +912,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 181,
+            "line" : 201,
             "column" : 4,
             "source_fragment" : "hdr.tcp.timestampreply = hdr.tcp.timestampval"
           }
@@ -1063,7 +954,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 182,
+            "line" : 202,
             "column" : 4,
             "source_fragment" : "hdr.tcp.timestampval = hdr.tcp.timestampval + 1"
           }
@@ -1082,7 +973,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 184,
+            "line" : 204,
             "column" : 4,
             "source_fragment" : "standard_metadata.egress_spec=standard_metadata.ingress_port"
           }
@@ -1099,7 +990,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "metadata.value"]
+              "value" : ["scalars", "metadata._value2"]
             },
             {
               "type" : "expression",
@@ -1109,7 +1000,7 @@
                   "op" : "&",
                   "left" : {
                     "type" : "field",
-                    "value" : ["scalars", "metadata.in_port"]
+                    "value" : ["scalars", "metadata._in_port0"]
                   },
                   "right" : {
                     "type" : "hexstr",
@@ -1121,7 +1012,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 195,
+            "line" : 215,
             "column" : 4,
             "source_fragment" : "meta.value = meta.in_port % 32"
           }
@@ -1143,7 +1034,7 @@
           "parameters" : [
             {
               "type" : "field",
-              "value" : ["scalars", "metadata.nhop_ipv4"]
+              "value" : ["scalars", "metadata._nhop_ipv43"]
             },
             {
               "type" : "runtime_data",
@@ -1152,7 +1043,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 207,
+            "line" : 227,
             "column" : 4,
             "source_fragment" : "meta.nhop_ipv4=nhop_ipv4"
           }
@@ -1194,7 +1085,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 208,
+            "line" : 228,
             "column" : 4,
             "source_fragment" : "hdr.ipv4.ttl=hdr.ipv4.ttl-1"
           }
@@ -1229,7 +1120,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 224,
+            "line" : 244,
             "column" : 4,
             "source_fragment" : "hdr.ethernet.dstAddr=dmac"
           }
@@ -1248,7 +1139,7 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 225,
+            "line" : 245,
             "column" : 4,
             "source_fragment" : "standard_metadata.egress_spec=port"
           }
@@ -1279,9 +1170,654 @@
           ],
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 240,
+            "line" : 260,
             "column" : 4,
             "source_fragment" : "hdr.ethernet.srcAddr=smac"
+          }
+        }
+      ]
+    },
+    {
+      "name" : "act",
+      "id" : 19,
+      "runtime_data" : [],
+      "primitives" : [
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_src_ip_addr6"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "srcAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 333,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.src_ip_addr = hdr.ipv4.srcAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_dst_ip_addr7"]
+            },
+            {
+              "type" : "field",
+              "value" : ["ipv4", "dstAddr"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 334,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.dst_ip_addr = hdr.ipv4.dstAddr"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_protocol8"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "field",
+                    "value" : ["ipv4", "protocol"]
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 335,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.protocol = (bit<16>)hdr.ipv4.protocol"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_tcp_len9"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "-",
+                      "left" : {
+                        "type" : "field",
+                        "value" : ["ipv4", "totalLen"]
+                      },
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "&",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "<<",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "&",
+                                  "left" : {
+                                    "type" : "field",
+                                    "value" : ["ipv4", "ihl"]
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xffff"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "hexstr",
+                                "value" : "0x2"
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0xffff"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 336,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.tcp_len = (bit<16>)hdr.ipv4.totalLen - (bit<16>)hdr.ipv4.ihl*4"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_srcPort10"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "srcPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 337,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.srcPort = hdr.tcp.srcPort"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_dstPort11"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "dstPort"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 338,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.dstPort = hdr.tcp.dstPort"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_seq12"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "seq"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 339,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.seq = hdr.tcp.seq"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_ackNumber13"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "ackNumber"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 340,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.ackNumber = hdr.tcp.ackNumber"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_hl14"]
+            },
+            {
+              "type" : "expression",
+              "value" : {
+                "type" : "expression",
+                "value" : {
+                  "op" : "&",
+                  "left" : {
+                    "type" : "expression",
+                    "value" : {
+                      "op" : "+",
+                      "left" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "&",
+                          "left" : {
+                            "type" : "expression",
+                            "value" : {
+                              "op" : "+",
+                              "left" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "&",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "+",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "&",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "+",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "&",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "+",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "&",
+                                                          "left" : {
+                                                            "type" : "expression",
+                                                            "value" : {
+                                                              "op" : "+",
+                                                              "left" : {
+                                                                "type" : "expression",
+                                                                "value" : {
+                                                                  "op" : "&",
+                                                                  "left" : {
+                                                                    "type" : "expression",
+                                                                    "value" : {
+                                                                      "op" : "+",
+                                                                      "left" : {
+                                                                        "type" : "expression",
+                                                                        "value" : {
+                                                                          "op" : "&",
+                                                                          "left" : {
+                                                                            "type" : "expression",
+                                                                            "value" : {
+                                                                              "op" : "<<",
+                                                                              "left" : {
+                                                                                "type" : "expression",
+                                                                                "value" : {
+                                                                                  "op" : "&",
+                                                                                  "left" : {
+                                                                                    "type" : "field",
+                                                                                    "value" : ["tcp", "dataOffset"]
+                                                                                  },
+                                                                                  "right" : {
+                                                                                    "type" : "hexstr",
+                                                                                    "value" : "0xffff"
+                                                                                  }
+                                                                                }
+                                                                              },
+                                                                              "right" : {
+                                                                                "type" : "hexstr",
+                                                                                "value" : "0xc"
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "right" : {
+                                                                            "type" : "hexstr",
+                                                                            "value" : "0xffff"
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "right" : {
+                                                                        "type" : "expression",
+                                                                        "value" : {
+                                                                          "op" : "&",
+                                                                          "left" : {
+                                                                            "type" : "expression",
+                                                                            "value" : {
+                                                                              "op" : "<<",
+                                                                              "left" : {
+                                                                                "type" : "expression",
+                                                                                "value" : {
+                                                                                  "op" : "&",
+                                                                                  "left" : {
+                                                                                    "type" : "field",
+                                                                                    "value" : ["tcp", "reserve"]
+                                                                                  },
+                                                                                  "right" : {
+                                                                                    "type" : "hexstr",
+                                                                                    "value" : "0xffff"
+                                                                                  }
+                                                                                }
+                                                                              },
+                                                                              "right" : {
+                                                                                "type" : "hexstr",
+                                                                                "value" : "0x6"
+                                                                              }
+                                                                            }
+                                                                          },
+                                                                          "right" : {
+                                                                            "type" : "hexstr",
+                                                                            "value" : "0xffff"
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  },
+                                                                  "right" : {
+                                                                    "type" : "hexstr",
+                                                                    "value" : "0xffff"
+                                                                  }
+                                                                }
+                                                              },
+                                                              "right" : {
+                                                                "type" : "expression",
+                                                                "value" : {
+                                                                  "op" : "&",
+                                                                  "left" : {
+                                                                    "type" : "expression",
+                                                                    "value" : {
+                                                                      "op" : "<<",
+                                                                      "left" : {
+                                                                        "type" : "expression",
+                                                                        "value" : {
+                                                                          "op" : "&",
+                                                                          "left" : {
+                                                                            "type" : "field",
+                                                                            "value" : ["tcp", "URG"]
+                                                                          },
+                                                                          "right" : {
+                                                                            "type" : "hexstr",
+                                                                            "value" : "0xffff"
+                                                                          }
+                                                                        }
+                                                                      },
+                                                                      "right" : {
+                                                                        "type" : "hexstr",
+                                                                        "value" : "0x5"
+                                                                      }
+                                                                    }
+                                                                  },
+                                                                  "right" : {
+                                                                    "type" : "hexstr",
+                                                                    "value" : "0xffff"
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0xffff"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "&",
+                                                          "left" : {
+                                                            "type" : "expression",
+                                                            "value" : {
+                                                              "op" : "<<",
+                                                              "left" : {
+                                                                "type" : "expression",
+                                                                "value" : {
+                                                                  "op" : "&",
+                                                                  "left" : {
+                                                                    "type" : "field",
+                                                                    "value" : ["tcp", "ACK"]
+                                                                  },
+                                                                  "right" : {
+                                                                    "type" : "hexstr",
+                                                                    "value" : "0xffff"
+                                                                  }
+                                                                }
+                                                              },
+                                                              "right" : {
+                                                                "type" : "hexstr",
+                                                                "value" : "0x4"
+                                                              }
+                                                            }
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0xffff"
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "hexstr",
+                                                    "value" : "0xffff"
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "&",
+                                                  "left" : {
+                                                    "type" : "expression",
+                                                    "value" : {
+                                                      "op" : "<<",
+                                                      "left" : {
+                                                        "type" : "expression",
+                                                        "value" : {
+                                                          "op" : "&",
+                                                          "left" : {
+                                                            "type" : "field",
+                                                            "value" : ["tcp", "PSH"]
+                                                          },
+                                                          "right" : {
+                                                            "type" : "hexstr",
+                                                            "value" : "0xffff"
+                                                          }
+                                                        }
+                                                      },
+                                                      "right" : {
+                                                        "type" : "hexstr",
+                                                        "value" : "0x3"
+                                                      }
+                                                    }
+                                                  },
+                                                  "right" : {
+                                                    "type" : "hexstr",
+                                                    "value" : "0xffff"
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0xffff"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "&",
+                                          "left" : {
+                                            "type" : "expression",
+                                            "value" : {
+                                              "op" : "<<",
+                                              "left" : {
+                                                "type" : "expression",
+                                                "value" : {
+                                                  "op" : "&",
+                                                  "left" : {
+                                                    "type" : "field",
+                                                    "value" : ["tcp", "RST"]
+                                                  },
+                                                  "right" : {
+                                                    "type" : "hexstr",
+                                                    "value" : "0xffff"
+                                                  }
+                                                }
+                                              },
+                                              "right" : {
+                                                "type" : "hexstr",
+                                                "value" : "0x2"
+                                              }
+                                            }
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0xffff"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xffff"
+                                  }
+                                }
+                              },
+                              "right" : {
+                                "type" : "expression",
+                                "value" : {
+                                  "op" : "&",
+                                  "left" : {
+                                    "type" : "expression",
+                                    "value" : {
+                                      "op" : "<<",
+                                      "left" : {
+                                        "type" : "expression",
+                                        "value" : {
+                                          "op" : "&",
+                                          "left" : {
+                                            "type" : "field",
+                                            "value" : ["tcp", "SYN"]
+                                          },
+                                          "right" : {
+                                            "type" : "hexstr",
+                                            "value" : "0xffff"
+                                          }
+                                        }
+                                      },
+                                      "right" : {
+                                        "type" : "hexstr",
+                                        "value" : "0x1"
+                                      }
+                                    }
+                                  },
+                                  "right" : {
+                                    "type" : "hexstr",
+                                    "value" : "0xffff"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0xffff"
+                          }
+                        }
+                      },
+                      "right" : {
+                        "type" : "expression",
+                        "value" : {
+                          "op" : "&",
+                          "left" : {
+                            "type" : "field",
+                            "value" : ["tcp", "FIN"]
+                          },
+                          "right" : {
+                            "type" : "hexstr",
+                            "value" : "0xffff"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "right" : {
+                    "type" : "hexstr",
+                    "value" : "0xffff"
+                  }
+                }
+              }
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 341,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.hl = (bit<16>)hdr.tcp.dataOffset*4096 + (bit<16>)hdr.tcp.reserve*64 + (bit<16>)hdr.tcp.URG*32 + (bit<16>)hdr.tcp.ACK*16 + (bit<16>)hdr.tcp.PSH*8 + (bit<16>)hdr.tcp.RST*4 + (bit<16>)hdr.tcp.SYN*2 + (bit<16>)hdr.tcp.FIN"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_window15"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "window"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 342,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.window = hdr.tcp.window"
+          }
+        },
+        {
+          "op" : "assign",
+          "parameters" : [
+            {
+              "type" : "field",
+              "value" : ["scalars", "metadata._csum_tcp_header_urgentPointer16"]
+            },
+            {
+              "type" : "field",
+              "value" : ["tcp", "urgentPointer"]
+            }
+          ],
+          "source_info" : {
+            "filename" : "zdf.p4",
+            "line" : 343,
+            "column" : 1,
+            "source_fragment" : "meta.csum_tcp_header.urgentPointer = hdr.tcp.urgentPointer"
           }
         }
       ]
@@ -1293,7 +1829,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 130,
+        "line" : 150,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -1304,7 +1840,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 143,
+            "line" : 163,
             "column" : 6,
             "source_fragment" : "boundTable"
           },
@@ -1341,7 +1877,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 158,
+            "line" : 178,
             "column" : 6,
             "source_fragment" : "get_port"
           },
@@ -1371,7 +1907,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 187,
+            "line" : 207,
             "column" : 6,
             "source_fragment" : "SYN"
           },
@@ -1400,7 +1936,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 198,
+            "line" : 218,
             "column" : 6,
             "source_fragment" : "ACK"
           },
@@ -1431,7 +1967,7 @@
           "id" : 4,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 253,
+            "line" : 273,
             "column" : 6,
             "source_fragment" : "dropTable"
           },
@@ -1461,7 +1997,7 @@
           "id" : 5,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 212,
+            "line" : 232,
             "column" : 6,
             "source_fragment" : "rib"
           },
@@ -1499,7 +2035,7 @@
           "id" : 6,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 228,
+            "line" : 248,
             "column" : 6,
             "source_fragment" : "interface"
           },
@@ -1507,7 +2043,7 @@
             {
               "match_type" : "exact",
               "name" : "meta.nhop_ipv4",
-              "target" : ["scalars", "metadata.nhop_ipv4"],
+              "target" : ["scalars", "metadata._nhop_ipv43"],
               "mask" : null
             }
           ],
@@ -1537,7 +2073,7 @@
           "id" : 7,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 243,
+            "line" : 263,
             "column" : 6,
             "source_fragment" : "fib"
           },
@@ -1578,7 +2114,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 274,
+            "line" : 294,
             "column" : 7,
             "source_fragment" : "hdr.ipv4.ttl>0"
           },
@@ -1604,7 +2140,7 @@
           "id" : 1,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 276,
+            "line" : 296,
             "column" : 11,
             "source_fragment" : "standard_metadata.ingress_port==PORT_ONE || standard_metadata.ingress_port==PORT_TWO || standard_metadata.ingress_port==PORT_THREE"
           },
@@ -1670,7 +2206,7 @@
           "id" : 2,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 279,
+            "line" : 299,
             "column" : 15,
             "source_fragment" : "meta.flag==ZERO"
           },
@@ -1680,7 +2216,7 @@
               "op" : "==",
               "left" : {
                 "type" : "field",
-                "value" : ["scalars", "metadata.flag"]
+                "value" : ["scalars", "metadata._flag5"]
               },
               "right" : {
                 "type" : "hexstr",
@@ -1696,7 +2232,7 @@
           "id" : 3,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 280,
+            "line" : 300,
             "column" : 19,
             "source_fragment" : "hdr.tcp.SYN==1"
           },
@@ -1722,7 +2258,7 @@
           "id" : 4,
           "source_info" : {
             "filename" : "zdf.p4",
-            "line" : 283,
+            "line" : 303,
             "column" : 24,
             "source_fragment" : "hdr.tcp.ACK==1"
           },
@@ -1750,12 +2286,36 @@
       "id" : 1,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 308,
+        "line" : 328,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
-      "init_table" : null,
-      "tables" : [],
+      "init_table" : "tbl_act",
+      "tables" : [
+        {
+          "name" : "tbl_act",
+          "id" : 8,
+          "key" : [],
+          "match_type" : "exact",
+          "type" : "simple",
+          "max_size" : 1024,
+          "with_counters" : false,
+          "support_timeout" : false,
+          "direct_meters" : null,
+          "action_ids" : [19],
+          "actions" : ["act"],
+          "base_default_next" : null,
+          "next_tables" : {
+            "act" : null
+          },
+          "default_entry" : {
+            "action_id" : 19,
+            "action_const" : true,
+            "action_data" : [],
+            "action_entry_const" : true
+          }
+        }
+      ],
       "action_profiles" : [],
       "conditionals" : []
     }
@@ -1766,7 +2326,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 317,
+        "line" : 349,
         "column" : 5,
         "source_fragment" : "update_checksum( ..."
       },
@@ -1792,8 +2352,8 @@
       "id" : 1,
       "source_info" : {
         "filename" : "zdf.p4",
-        "line" : 334,
-        "column" : 4,
+        "line" : 365,
+        "column" : 1,
         "source_fragment" : "update_checksum_with_payload( ..."
       },
       "target" : ["tcp", "checkSum"],
