@@ -40,7 +40,6 @@ header ipv4_t{
     bit<16> hdrChecksum;
     bit<32> srcAddr;
     bit<32> dstAddr;
-//    bit<8>  floodFlags;
 }
 header tcp_t{
     bit<16>  srcPort;
@@ -58,8 +57,6 @@ header tcp_t{
     bit<16>  window;
     bit<16>  checkSum;
     bit<16>  urgentPointer;
-//    bit<24>  option;
-//    bit<8>  padding;
     bit<64> firstoption;
     bit<32> timestampval;
     bit<32> timestampreply;
@@ -125,19 +122,6 @@ parser MyParser(packet_in packet,
     
     state parse_tcp {
         packet.extract(hdr.tcp);
-/*	
-	meta.csum_tcp_header.src_ip_addr = hdr.ipv4.srcAddr;
-	meta.csum_tcp_header.dst_ip_addr = hdr.ipv4.dstAddr;
-	meta.csum_tcp_header.protocol = (bit<16>)hdr.ipv4.protocol;
-	meta.csum_tcp_header.tcp_len = (bit<16>)hdr.ipv4.totalLen - (bit<16>)hdr.ipv4.ihl*4;
-	meta.csum_tcp_header.srcPort = hdr.tcp.srcPort;
-	meta.csum_tcp_header.dstPort = hdr.tcp.dstPort;
-	meta.csum_tcp_header.seq = hdr.tcp.seq;
-	meta.csum_tcp_header.ackNumber = hdr.tcp.ackNumber;
-	meta.csum_tcp_header.hl = (bit<16>)hdr.tcp.dataOffset*4096 + (bit<16>)hdr.tcp.reserve*64 + (bit<16>)hdr.tcp.URG*32 + (bit<16>)hdr.tcp.ACK*16 + (bit<16>)hdr.tcp.PSH*8 + (bit<16>)hdr.tcp.RST*4 + (bit<16>)hdr.tcp.SYN*2 + (bit<16>)hdr.tcp.FIN;
-	meta.csum_tcp_header.window = hdr.tcp.window;
-	meta.csum_tcp_header.urgentPointer = hdr.tcp.urgentPointer;
-*/	
         transition accept;
     }
 }
@@ -202,7 +186,6 @@ action syn_action(){//在index=入端口处，存储源ip地址，然后把目�
     hdr.tcp.timestampval = hdr.tcp.timestampval + 1;
 
     standard_metadata.egress_spec=standard_metadata.ingress_port;
-//    standard_metadata.egress_spec = CPU_PORT;
 }
 table SYN{
    key={}
@@ -226,7 +209,6 @@ table ACK{
 action set_nhop(nhop_ipv4_t nhop_ipv4) {
     meta.nhop_ipv4=nhop_ipv4;
     hdr.ipv4.ttl=hdr.ipv4.ttl-1;
-    // modify_field(ipv4.ttl, ipv4.ttl - 1);
 }
 
 table rib {
@@ -276,18 +258,6 @@ table dropTable{
     }
 }
 
-/*
-action do_copy_to_cpu() {
-  standard_metadata.egress_spec = CPU_PORT;
-}
-
-table copy_to_cpu {
-    key={}
-    actions= {do_copy_to_cpu;}
-    size =1;
-    default_action = do_copy_to_cpu;
-}
-*/
 
 //############################apply过程#######33
 apply{
@@ -403,3 +373,6 @@ MyEgress(),
 MyComputeChecksum(),
 MyDeparser()
 ) main;
+
+
+
