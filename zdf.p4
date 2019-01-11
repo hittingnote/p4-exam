@@ -135,7 +135,7 @@ parser MyParser(packet_in packet,
 	meta.csum_tcp_header.src_ip_addr = hdr.ipv4.srcAddr;
 	meta.csum_tcp_header.dst_ip_addr = hdr.ipv4.dstAddr;
 	meta.csum_tcp_header.protocol = (bit<16>)hdr.ipv4.protocol;
-	meta.csum_tcp_header.tcp_len = ((bit<16>)hdr.ipv4.totalLen - (bit<16>)hdr.ipv4.ihl*4) / 4;
+	meta.csum_tcp_header.tcp_len = (bit<16>)hdr.ipv4.totalLen - (bit<16>)hdr.ipv4.ihl*4;
 	meta.csum_tcp_header.srcPort = hdr.tcp.srcPort;
 	meta.csum_tcp_header.dstPort = hdr.tcp.dstPort;
 	meta.csum_tcp_header.seq = hdr.tcp.seq;
@@ -299,19 +299,6 @@ table copy_to_cpu {
 
 //############################apply过程#######33
 apply{
-/*
-	csum_tcp_header.src_ip_addr = hdr.ipv4.srcAddr;
-	csum_tcp_header.dst_ip_addr = hdr.ipv4.dstAddr;
-	csum_tcp_header.protocol = (bit<16>)hdr.ipv4.protocol;
-	csum_tcp_header.tcp_len = (hdr.ipv4.totalLen - hdr.ipv4.ihl*4) / 4;
-	csum_tcp_header.srcPort = hdr.tcp.srcPort;
-	csum_tcp_header.dstPort = hdr.tcp.dstPort;
-	csum_tcp_header.seq = hdr.tcp.seq;
-	csum_tcp_header.ackNumber = hdr.tcp.ackNumber;
-	csum_tcp_header.hl = (bit<16>)hdr.tcp.dataOffset<<12 + (bit<16>)hdr.tcp.reserve<<6 + (bit<16>)hdr.tcp.URG<<5 + (bit<16>)hdr.tcp.ACK<<4 + (bit<16>)hdr.tcp.PUSH<<3 + (bit<16>)hdr.tcp.RST<<2 + (bit<16>)hdr.tcp.SYN<<1 + (bit<16>)hdr.tcp.FIN;
-	csum_tcp_header.window = hdr.tcp.window;
-	csum_tcp_header.urgentPointer = hdr.tcp.urgentPointer;
-*/
     if(hdr.ipv4.ttl>0){
 //查看端口号，对端口号时Port_one\port_two\port_three\Port_four的端口认为他们是与客服端相连的端口，并对他们进行源地址认证
         if(standard_metadata.ingress_port==PORT_ONE || standard_metadata.ingress_port==PORT_TWO || standard_metadata.ingress_port==PORT_THREE){
@@ -393,37 +380,6 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
 		HashAlgorithm.csum16
 	);
 
-/*    bit<16> tcplen = ((bit<16>)hdr.ipv4.totalLen-(bit<16>)hdr.ipv4.ihl*4)/4;
-    update_checksum_with_payload(
-        hdr.tcp.isValid(),
-        {
-          hdr.ipv4.srcAddr,
-          hdr.ipv4.dstAddr,
-//          (bit<8>)0,
-          (bit<16>)hdr.ipv4.protocol,
-          tcplen,
-          hdr.tcp.srcPort,
-          hdr.tcp.dstPort,
-          hdr.tcp.seq,
-          hdr.tcp.ackNumber,
-          hdr.tcp.dataOffset,
-          hdr.tcp.reserve,
-          hdr.tcp.URG,
-          hdr.tcp.ACK,
-          hdr.tcp.PSH,
-          hdr.tcp.RST,
-          hdr.tcp.SYN,
-          hdr.tcp.FIN,
-          hdr.tcp.window,
-          hdr.tcp.urgentPointer,
-          hdr.tcp.firstoption,
-          hdr.tcp.timestampval,
-          hdr.tcp.timestampreply,
-          hdr.tcp.padding
-        },
-        hdr.tcp.checkSum,
-        HashAlgorithm.csum16
-    );*/
      }
  }
 //#########################depaser##########################
