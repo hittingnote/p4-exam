@@ -80,7 +80,7 @@ struct csum_tcp_t {
     bit<16> urgentPointer;
 }
 
-#define REGISTER_SIZE 32
+#define REGISTER_SIZE		32
 
 struct metadata{
      bit<9> in_port;
@@ -215,6 +215,20 @@ table SYN{
 action ack_action(){//在index=入端口处，取出存储的IP地址
     meta.value = meta.in_port % REGISTER_SIZE;
     srcAddr_register.read(meta.srcAddr, (bit<32>)meta.value);
+	srcAddr_register.write((bit<32>)meta.value, (bit<32>)0);
+/*
+    bit<32> tmp32 = hdr.ipv4.srcAddr;
+    hdr.ipv4.srcAddr = hdr.ipv4.dstAddr;
+    hdr.ipv4.dstAddr = tmp32;
+
+    bit<16> tmp16 = hdr.tcp.srcPort;
+    hdr.tcp.srcPort = (bit<16>)hdr.tcp.dstPort;
+    hdr.tcp.dstPort = tmp16;
+
+    hdr.tcp.controlflag = hdr.tcp.controlflag | 0x004;
+
+	standard_metadata.egress_spec = standard_metadata.ingress_port;
+*/
 }
 table ACK{
    key={}
@@ -316,6 +330,10 @@ table copy_to_cpu {
               standard_metadata.egress_spec = CPU_PORT;
             }
           }
+		  else
+		  {
+			  dropTable.apply();
+		  }
         }
         else
         {
@@ -324,6 +342,20 @@ table copy_to_cpu {
           fib.apply();
         }
       }
+	  else if(standard_metadata.ingress_port == CPU_PORT)
+	  {
+		bit<32> tmp32 = hdr.ipv4.srcAddr;
+		hdr.ipv4.srcAddr = hdr.ipv4.dstAddr;
+		hdr.ipv4.dstAddr = tmp32;
+
+		bit<16> tmp16 = hdr.tcp.srcPort;
+		hdr.tcp.srcPort = (bit<16>)hdr.tcp.dstPort;
+		hdr.tcp.dstPort = tmp16;
+
+		hdr.tcp.controlflag = hdr.tcp.controlflag | 0x004;
+
+		standard_metadata.egress_spec = standard_metadata.ingress_port;
+	  }
       else
       {
         rib.apply();

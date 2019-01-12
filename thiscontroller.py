@@ -132,7 +132,9 @@ def main(p4info_file_path, bmv2_file_path):
                     metadata_id = meta.metadata_id
                     value = meta.value
 
-                pkt.show2()
+                pkt_ip_src = pkt.getlayer(IP).src
+                writeBoundTable(p4info_helper, sw=s1, ip_src_addr=pkt_ip_src)
+
             """
             packetin = s2.PacketIn()
             if packetin.WhichOneof('update') == 'packet':
