@@ -48,13 +48,14 @@ header tcp_t{
     bit<32>  seq;
     bit<32>  ackNumber;
     bit<4>   dataOffset;
-    bit<6>   reserve;
+    bit<12>  controlflag;
+/*    bit<6>   reserve;
     bit<1>   URG;
     bit<1>   ACK;
     bit<1>   PSH;
     bit<1>   RST;
     bit<1>   SYN;
-    bit<1>   FIN;
+    bit<1>   FIN;*/
     bit<16>  window;
     bit<16>  checkSum;
     bit<16>  urgentPointer;
@@ -297,10 +298,10 @@ apply{
             boundTable.apply();//验证绑定表
             get_port.apply();//将入端口的值从standard.ingress_port,传给meta.in_port
             if(meta.flag==ZERO){//验证绑定表失bai
-                if(hdr.tcp.SYN==1){//查看是否是syn报文
+                if(hdr.tcp.controlflag==0x002){//查看是否是syn报文
                     SYN.apply();
                  }
-                else if(hdr.tcp.ACK==1){//查看是否是ACK报文
+                else if(hdr.tcp.controlflag==0x010){//查看是否是ACK报文
                     ACK.apply();
                     if(meta.srcAddr==hdr.ipv4.srcAddr){
                       //  standard_metadata.egress_spec = CPU_PORT;
@@ -338,7 +339,7 @@ apply{
 	meta.csum_tcp_header.dstPort = hdr.tcp.dstPort;
 	meta.csum_tcp_header.seq = hdr.tcp.seq;
 	meta.csum_tcp_header.ackNumber = hdr.tcp.ackNumber;
-	meta.csum_tcp_header.hl = (bit<16>)hdr.tcp.dataOffset*4096 + (bit<16>)hdr.tcp.reserve*64 + (bit<16>)hdr.tcp.URG*32 + (bit<16>)hdr.tcp.ACK*16 + (bit<16>)hdr.tcp.PSH*8 + (bit<16>)hdr.tcp.RST*4 + (bit<16>)hdr.tcp.SYN*2 + (bit<16>)hdr.tcp.FIN;
+	meta.csum_tcp_header.hl = (bit<16>)hdr.tcp.dataOffset*4096 + (bit<16>)hdr.tcp.controlflag;
 	meta.csum_tcp_header.window = hdr.tcp.window;
 	meta.csum_tcp_header.urgentPointer = hdr.tcp.urgentPointer;
 	}
