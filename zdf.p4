@@ -196,7 +196,7 @@ action syn_action(){//在index=入端口处，存储源ip地址，然后把目�
     hdr.tcp.dstPort = tmp16;
 
 
-    hdr.tcp.ACK = 1;
+    hdr.tcp.controlflag = hdr.tcp.controlflag | 0x010;
     hdr.tcp.ackNumber = hdr.tcp.seq + 1;
 
     hdr.tcp.timestampreply = hdr.tcp.timestampval;
@@ -214,7 +214,7 @@ table SYN{
 }
 action ack_action(){//在index=入端口处，取出存储的IP地址
     meta.value = meta.in_port % REGISTER_SIZE;
-//    srcAddr_register.read(meta.srcAddr, (bit<32>)meta.value);
+    srcAddr_register.read(meta.srcAddr, (bit<32>)meta.value);
 }
 table ACK{
    key={}
@@ -222,6 +222,8 @@ table ACK{
         ack_action;
         _drop;
     }
+
+    default_action = ack_action;
 }
 //以下是传统的转发过程（抄助教的代码）
 action set_nhop(nhop_ipv4_t nhop_ipv4) {
@@ -291,7 +293,48 @@ table copy_to_cpu {
 */
 
 //############################apply过程#######33
-apply{
+
+  apply
+  {
+    if(hdr.ipv4.ttl > 0)
+    {
+      if(standard_metadata.ingress_port == PORT_ONE || standard_metadata.ingress_port == PORT_TWO || standard_metadata.ingress_port == PORT_THREE)
+      {
+        boundTable.apply();
+        get_port.apply();
+        if(meta.flag == ZERO)
+        {
+          if(hdr.tcp.controlflag == 0x002)
+          {
+            SYN.apply();
+          }
+          else if(hdr.tcp.dataOffset == 0xa)
+          {
+            ACK.apply();
+            if(meta.srcAddr == hdr.ipv4.srcAddr)
+            {
+              standard_metadata.egress_spec = CPU_PORT;
+            }
+          }
+        }
+        else
+        {
+          rib.apply();
+          interface.apply();
+          fib.apply();
+        }
+      }
+      else
+      {
+        rib.apply();
+        interface.apply();
+        fib.apply();
+      }
+    }
+  }
+
+
+/*apply{
     if(hdr.ipv4.ttl>0){
 //查看端口号，对端口号时Port_one\port_two\port_three\Port_four的端口认为他们是与客服端相连的端口，并对他们进行源地址认证
         if(standard_metadata.ingress_port==PORT_ONE || standard_metadata.ingress_port==PORT_TWO || standard_metadata.ingress_port==PORT_THREE){
@@ -301,7 +344,15 @@ apply{
                 if(hdr.tcp.controlflag==0x002){//查看是否是syn报文
                     SYN.apply();
                  }
+                else
+                {
+                  if(hdr.tcp.controlflag == 0x010)
+                  {
+                    standard_metadata.egress_spec = CPU_PORT;
+                  }
+                }
                 else if(hdr.tcp.controlflag==0x010){//查看是否是ACK报文
+                    standard_metadata.egress_spec = CPU_PORT;
                     ACK.apply();
                     if(meta.srcAddr==hdr.ipv4.srcAddr){
                       //  standard_metadata.egress_spec = CPU_PORT;
@@ -323,7 +374,7 @@ apply{
               fib.apply();
         }
   }
-}
+}*/
 }
 //##########################Egress##########################
 control MyEgress(inout headers hdr,
